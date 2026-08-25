@@ -1,86 +1,87 @@
-# Clinova Platform: Architectural Blueprint & Foundation Implementation Plan
+# Clinova Platform: Phase 1 Foundation & Authentication Architecture
 
-## Executive Summary & Current Repository State
+## 1. Executive Summary & Strict Phase 1 Scope
 
-**Clinova** is a multi-client healthcare ecosystem designed to serve patients and hospital administrative/clinical staff through dedicated client applications backed by a centralized, secure Python FastAPI backend and a PostgreSQL database.
+**Clinova** is a multi-client healthcare platform connecting patients and hospital administrative entities through dedicated web and mobile interfaces powered by a central **FastAPI** backend and **PostgreSQL** database.
 
-### Repository Inspection
-- **Repository Path**: `c:\Clinova\Clinova-sih`
-- **Remote Origin**: `https://github.com/harshalbari05/Clinova-sih`
-- **Current State**: Initialized Git repository on `main` branch with 0 commits (empty workspace).
-- **Environment & Toolchain**:
-  - Python: `3.14.0`
-  - Node.js: `v24.19.0` (npm `11.17.0`)
-  - Git: `2.55.0`
-  - Database: PostgreSQL 18 service (`postgresql-x64-18`) active locally on Windows (`C:\Program Files\PostgreSQL\18\bin`)
+### Strict Phase 1 Boundaries:
+The Phase 1 scope is strictly constrained to **core system foundation and role-based authentication**. No secondary clinical workflows or future modules are included at this stage.
+
+| Domain | In-Scope (Phase 1 Only) | Out-of-Scope (Postponed to Future Phases) |
+| :--- | :--- | :--- |
+| **Patient** | Registration, Login, Logout, View/Update basic profile, Protected Patient home view | Medical history, vitals, prescriptions, appointment booking, lab records |
+| **Hospital** | Registration, Login, Logout, View/Update basic facility profile, Protected Hospital dashboard | Doctors, staff management, departments, bed allocation, patient queues |
+| **Platforms** | Patient Web, Patient Mobile (Expo), Hospital Web, Central FastAPI API, PostgreSQL | Microservices, standalone AI engines, background Celery workers, Redis |
+| **Database** | 4 Tables: `users`, `patient_profiles`, `hospitals`, `refresh_tokens` | Appointments, consultations, audit logs, vector tables (`pgvector`), FHIR |
+| **Security** | JWT auth, token rotation, `pwdlib[argon2]` hashing, RBAC (`PATIENT` vs `HOSPITAL`) | Biometric auth, external identity providers (OAuth/SAML), ABDM bridge |
 
 ---
 
-## 1. Directory Structure (Clean Monorepo Layout)
+## 2. Monorepo Directory Structure
 
-We propose a structured monorepo organization that separates client applications, backend services, database migrations, and shared documentation while maintaining clear boundary isolation and independent dependency management.
+The project uses a structured, clean monorepo architecture separating the backend service, three independent frontend client applications, and shared documentation.
 
 ```
 Clinova-sih/
 ├── .github/
-│   └── workflows/              # CI/CD pipelines (linting, tests, build checks)
+│   └── workflows/                       # Path-filtered CI workflows (linting, tests, build checks)
 ├── backend/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── v1/
 │   │   │   │   ├── endpoints/
-│   │   │   │   │   ├── auth.py          # /register, /login, /refresh, /logout
+│   │   │   │   │   ├── auth.py          # /auth/patient/register, /auth/hospital/register, /auth/login, /auth/refresh, /auth/logout
 │   │   │   │   │   ├── patients.py      # /patients/me (profile get & update)
 │   │   │   │   │   └── hospitals.py     # /hospitals/me (profile get & update)
-│   │   │   │   └── router.py            # Aggregates v1 routes
-│   │   │   └── deps.py                  # FastAPI dependency injection (get_db, get_current_user, require_role)
+│   │   │   │   └── router.py            # Aggregates v1 endpoints
+│   │   │   └── deps.py                  # Dependencies: get_async_db, get_current_user, require_role
 │   │   ├── core/
-│   │   │   ├── config.py                # Pydantic Settings (ENV variables, DB URL, JWT secrets)
-│   │   │   ├── security.py              # Password hashing (Argon2id/bcrypt), JWT encode/decode
+│   │   │   ├── config.py                # Pydantic Settings (ENV variables, DB connection, JWT secrets)
+│   │   │   ├── security.py              # Argon2 password hashing (via pwdlib), JWT encode/decode
 │   │   │   └── exceptions.py            # Custom HTTP exceptions and global handlers
 │   │   ├── db/
-│   │   │   ├── base.py                  # Base declarative class and metadata registry
-│   │   │   └── session.py               # SQLAlchemy engine & sessionmaker (scoped sessions)
-│   │   ├── models/                      # SQLAlchemy ORM database models
-│   │   │   ├── __init__.py              # Central imports for Alembic discovery
+│   │   │   ├── base.py                  # SQLAlchemy DeclarativeBase and metadata registry
+│   │   │   └── session.py               # Async engine (create_async_engine) & async_sessionmaker
+│   │   ├── models/                      # SQLAlchemy 2.0 Async ORM models
+│   │   │   ├── __init__.py              # Central imports for Alembic autogenerate discovery
 │   │   │   ├── user.py                  # User table (auth credentials + UserRole enum)
-│   │   │   ├── patient.py               # PatientProfile table (demographics, contact)
-│   │   │   ├── hospital.py              # HospitalProfile table (facility details, license)
-│   │   │   └── token_blocklist.py       # Revoked tokens / active refresh sessions
-│   │   ├── schemas/                     # Pydantic v2 validation & serialization models
+│   │   │   ├── patient.py               # PatientProfile table (demographics)
+│   │   │   ├── hospital.py              # Hospital table (facility profile)
+│   │   │   └── refresh_token.py         # RefreshToken table (token tracking & revocation)
+│   │   ├── schemas/                     # Pydantic v2 validation & response DTOs
 │   │   │   ├── __init__.py
-│   │   │   ├── auth.py                  # LoginRequest, RegisterRequest, TokenResponse, TokenPayload
+│   │   │   ├── auth.py                  # LoginRequest, TokenResponse, RefreshRequest
 │   │   │   ├── user.py                  # UserBase, UserOut, UserRoleEnum
-│   │   │   ├── patient.py               # PatientRegister, PatientProfileOut, PatientProfileUpdate
-│   │   │   └── hospital.py              # HospitalRegister, HospitalProfileOut, HospitalProfileUpdate
-│   │   ├── services/                    # Business logic layer (decoupled from HTTP layer)
-│   │   │   ├── auth_service.py          # User registration, verification, token minting & revocation
-│   │   │   ├── patient_service.py       # Patient profile management logic
-│   │   │   └── hospital_service.py      # Hospital profile management logic
+│   │   │   ├── patient.py               # PatientRegisterRequest, PatientProfileOut, PatientProfileUpdate
+│   │   │   └── hospital.py              # HospitalRegisterRequest, HospitalProfileOut, HospitalProfileUpdate
+│   │   ├── services/                    # Business logic layer (decoupled from HTTP routes)
+│   │   │   ├── auth_service.py          # Registration, credential validation, JWT minting & revocation
+│   │   │   ├── patient_service.py       # Patient profile CRUD logic
+│   │   │   └── hospital_service.py      # Hospital profile CRUD logic
 │   │   └── main.py                      # FastAPI app factory, CORS middleware, lifespan events
 │   ├── alembic/                         # Database schema migrations
 │   │   ├── versions/
-│   │   └── env.py
+│   │   └── env.py                       # Configured for async migration execution
 │   ├── alembic.ini
 │   ├── pyproject.toml / requirements.txt
 │   ├── .env.example
 │   └── tests/
-│       ├── conftest.py
-│       ├── test_auth.py
-│       └── test_profiles.py
+│       ├── conftest.py                  # Test fixtures & test DB session setup
+│       ├── test_auth.py                 # Registration, login, refresh, logout tests
+│       └── test_profiles.py             # Profile retrieval, updates, and RBAC rejection tests
 ├── clients/
-│   ├── patient-web/                     # React + TypeScript + Vite (Patient Web Portal)
+│   ├── patient-web/                     # React + TypeScript + Vite (Patient Portal)
 │   │   ├── public/
 │   │   ├── src/
 │   │   │   ├── assets/
-│   │   │   ├── components/              # UI components (Navbar, ProtectedRoute, Forms, Layout)
-│   │   │   ├── context/                 # AuthContext (token storage, login state, user info)
-│   │   │   ├── pages/                   # LoginPage, RegisterPage, DashboardPage, ProfilePage
-│   │   │   ├── services/                # Axios/Fetch API client with auth interceptor
+│   │   │   ├── components/              # Layout, Navbar, ProtectedRoute, Input, Button, Card
+│   │   │   ├── context/                 # AuthContext (lightweight auth session state)
+│   │   │   ├── pages/                   # LoginPage, RegisterPage, HomePage, ProfilePage
+│   │   │   ├── services/                # Axios API client with token refresh interceptor
 │   │   │   ├── types/                   # TypeScript interfaces (User, PatientProfile, AuthTokens)
 │   │   │   ├── App.tsx
 │   │   │   ├── main.tsx
-│   │   │   └── index.css
+│   │   │   └── index.css                # Vanilla CSS design tokens (Calm Medical Blue/Slate)
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── vite.config.ts
@@ -89,14 +90,14 @@ Clinova-sih/
 │   │   ├── public/
 │   │   ├── src/
 │   │   │   ├── assets/
-│   │   │   ├── components/              # Sidebar, ProtectedRoute, MetricCards, DashboardHeader
-│   │   │   ├── context/                 # AuthContext (Hospital auth state & role gate)
-│   │   │   ├── pages/                   # LoginPage, RegisterPage, DashboardPage, FacilityProfilePage
-│   │   │   ├── services/                # API client with token interceptor
-│   │   │   ├── types/                   # TypeScript interfaces (HospitalProfile, User, Auth)
+│   │   │   ├── components/              # Sidebar, ProtectedRoute, DashboardHeader, FacilityCard
+│   │   │   ├── context/                 # AuthContext (Hospital auth session state & role gate)
+│   │   │   ├── pages/                   # LoginPage, RegisterPage, DashboardHomePage, FacilityProfilePage
+│   │   │   ├── services/                # Axios API client with token interceptor
+│   │   │   ├── types/                   # TypeScript interfaces (User, Hospital, AuthTokens)
 │   │   │   ├── App.tsx
 │   │   │   ├── main.tsx
-│   │   │   └── index.css
+│   │   │   └── index.css                # Vanilla CSS design tokens (Clinical Teal/Navy/Slate)
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── vite.config.ts
@@ -104,353 +105,368 @@ Clinova-sih/
 │   └── patient-mobile/                  # React Native + Expo + TypeScript (Patient Mobile App)
 │       ├── assets/
 │       ├── src/
-│       │   ├── components/              # Button, Input, Card, Header, LoadingScreen
+│       │   ├── components/              # Button, Input, Card, Header, LoadingSpinner
 │       │   ├── context/                 # AuthContext backed by expo-secure-store
-│       │   ├── navigation/              # React Navigation (AuthStack, AppStack, TabNavigator)
+│       │   ├── navigation/              # React Navigation (AuthStack, AppStack, BottomTabs)
 │       │   ├── screens/                 # LoginScreen, RegisterScreen, HomeScreen, ProfileScreen
-│       │   ├── services/                # API client configured for Mobile (Localhost / LAN IP)
-│       │   ├── types/                   # Shared TypeScript models
+│       │   ├── services/                # API client with dynamic host resolution (LAN / Emulator)
+│       │   ├── types/                   # TypeScript models
 │       │   └── utils/                   # Secure storage helpers
 │       ├── App.tsx
 │       ├── app.json
 │       ├── package.json
 │       └── tsconfig.json
-├── docs/                                # Architecture diagrams & setup guides
+├── docs/                                # Setup guides & architecture documentation
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 2. Responsibilities of Each Application
+## 3. Database Architecture & Initial Schema (Phase 1)
 
-| Application | Technology | Primary Target Users | Responsibilities & Boundary |
-| :--- | :--- | :--- | :--- |
-| **Central Backend API** | Python, FastAPI, SQLAlchemy | All 3 Clients | Single source of truth. Handles business logic, role-based auth, password hashing, JWT creation/refresh/invalidation, data validation, database persistence, and RBAC enforcement. |
-| **Patient Web Application** | React + TypeScript + Vite | Patients on Desktop/Web Browsers | Patient onboarding (registration), authentication, viewing & updating patient demographics/medical history baseline, responsive patient dashboard with token lifecycle management. |
-| **Hospital Web Dashboard** | React + TypeScript + Vite | Hospital Admins, Clinicians, Staff | Hospital facility onboarding (registration with license/accreditation), secure dashboard access, facility profile management, staff role validation, audit-ready data display. |
-| **Patient Mobile Application** | React Native + Expo + TypeScript | Patients on iOS / Android Devices | Native mobile patient experience. Secure credential and JWT persistence via hardware-backed SecureStore/Keychain, offline-safe state, biometric readiness, mobile-optimized auth and profile flows. |
+The persistence layer uses **PostgreSQL** with **SQLAlchemy 2.0 Async (`asyncpg`)** and **Alembic** migrations.
 
----
-
-## 3. Backend Architecture
-
-The backend adheres to a **Layered & Clean Architecture** pattern:
-
-```
-[ HTTP Requests ]
-       │
-       ▼
-┌────────────────────────────────────────────────────────┐
-│  FastAPI Routing & Middleware Layer                    │
-│  - CORS Middleware, Request ID, Exception Handlers     │
-│  - Pydantic v2 Request Validation & Response Filtering │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│  Dependency Injection Layer (app/api/deps.py)          │
-│  - Database session lifecycle (get_db)                 │
-│  - Authentication guard (get_current_user)             │
-│  - Role Guard (require_role: PATIENT | HOSPITAL)       │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│  Service / Business Logic Layer (app/services/)        │
-│  - AuthService: verify credentials, hash passwords,    │
-│    generate token pairs, revoke refresh tokens         │
-│  - PatientService & HospitalService: profile crud      │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│  Data Access & ORM Models Layer (app/models/)          │
-│  - SQLAlchemy 2.0 Declarative Mapped Models            │
-│  - Session Commit / Rollback Transactions              │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│  PostgreSQL 18 Database Engine                         │
-└────────────────────────────────────────────────────────┘
-```
-
-### Key Backend Architectural Decisions:
-1. **Pydantic Settings**: Centralized configuration management from `.env` with strict type validation (JWT secrets, DB connection pool, token expiration times, allowed CORS origins).
-2. **Dependency Injection**: Route handlers do not instantiate services or DB connections directly; dependencies provide clean unit testing and mockability.
-3. **Role Guards**: Higher-order dependency `require_role(allowed_roles)` guarantees role-based endpoint isolation. A user with role `PATIENT` cannot access `/hospitals/*` and vice versa.
-
----
-
-## 4. Database Architecture & Schema Design
-
-Using **PostgreSQL** with **SQLAlchemy 2.0 Mapped Columns** and **Alembic** migrations.
+### Entity Relationship Model
 
 ```mermaid
 erDiagram
-    USERS ||--o| PATIENT_PROFILES : "has profile (if PATIENT)"
-    USERS ||--o| HOSPITAL_PROFILES : "has profile (if HOSPITAL)"
+    USERS ||--o| PATIENT_PROFILES : "1:1 profile (if role=PATIENT)"
+    USERS ||--o| HOSPITALS : "1:1 profile (if role=HOSPITAL)"
     USERS ||--o{ REFRESH_TOKENS : "owns"
 
     USERS {
         uuid id PK
-        string email UK
+        string email UK "Indexed"
         string password_hash
-        enum role "PATIENT | HOSPITAL | ADMIN"
-        boolean is_active
-        boolean is_verified
+        enum role "PATIENT | HOSPITAL"
+        boolean is_active "Default true"
         timestamp created_at
         timestamp updated_at
     }
 
     PATIENT_PROFILES {
         uuid id PK
-        uuid user_id FK, UK
-        string first_name
-        string last_name
+        uuid user_id FK, UK "1:1 with users.id, ON DELETE CASCADE"
+        string full_name
         string phone
         date date_of_birth
         string gender
-        string blood_group
-        string emergency_contact
-        text address
         timestamp created_at
         timestamp updated_at
     }
 
-    HOSPITAL_PROFILES {
+    HOSPITALS {
         uuid id PK
-        uuid user_id FK, UK
+        uuid user_id FK, UK "1:1 with users.id, ON DELETE CASCADE"
         string hospital_name
-        string registration_number UK
-        string contact_phone
-        string contact_email
-        string address_line1
+        string email
+        string phone
+        string address
         string city
         string state
-        string postal_code
-        string emergency_helpline
-        integer total_bed_capacity
-        boolean is_accredited
         timestamp created_at
         timestamp updated_at
     }
 
     REFRESH_TOKENS {
         uuid id PK
-        uuid user_id FK
-        string token_hash UK
+        uuid user_id FK "References users.id, ON DELETE CASCADE"
+        string token_hash UK "Indexed"
         timestamp expires_at
-        boolean is_revoked
+        timestamp revoked_at "Nullable"
         timestamp created_at
     }
 ```
 
-### Key Schema Characteristics:
-- **UUID Primary Keys**: Prevents sequential ID scraping across multi-tenant clients.
-- **Strict Role Separation**: Core auth data lives in `users`. Profiles are isolated in `patient_profiles` and `hospital_profiles` linked via 1-to-1 foreign keys with `ON DELETE CASCADE`.
-- **Token Invalidation Support**: `refresh_tokens` records active and revoked sessions to enable explicit logout and token rotation.
-- **Indexes**: Indexed on `email`, `role`, `user_id`, and `registration_number` for fast lookups.
+### Table Specifications:
+
+1. **`users`**:
+   - `id`: UUID (Primary Key, auto-generated default `uuid7` or `uuid4`)
+   - `email`: VARCHAR(255), Unique, Not Null, Indexed
+   - `password_hash`: VARCHAR(255), Not Null (Argon2id hash string)
+   - `role`: VARCHAR(20), Not Null (`PATIENT` or `HOSPITAL`)
+   - `is_active`: BOOLEAN, Default `True`, Not Null
+   - `created_at`: TIMESTAMPTZ, Default `now()`, Not Null
+   - `updated_at`: TIMESTAMPTZ, Default `now()`, OnUpdate `now()`, Not Null
+
+2. **`patient_profiles`**:
+   - `id`: UUID (Primary Key)
+   - `user_id`: UUID, Unique, Foreign Key (`users.id`, `ON DELETE CASCADE`), Not Null
+   - `full_name`: VARCHAR(150), Not Null
+   - `phone`: VARCHAR(25), Nullable
+   - `date_of_birth`: DATE, Nullable
+   - `gender`: VARCHAR(20), Nullable
+   - `created_at`: TIMESTAMPTZ, Default `now()`, Not Null
+   - `updated_at`: TIMESTAMPTZ, Default `now()`, OnUpdate `now()`, Not Null
+
+3. **`hospitals`**:
+   - `id`: UUID (Primary Key)
+   - `user_id`: UUID, Unique, Foreign Key (`users.id`, `ON DELETE CASCADE`), Not Null
+   - `hospital_name`: VARCHAR(200), Not Null
+   - `email`: VARCHAR(255), Nullable
+   - `phone`: VARCHAR(25), Nullable
+   - `address`: TEXT, Nullable
+   - `city`: VARCHAR(100), Nullable
+   - `state`: VARCHAR(100), Nullable
+   - `created_at`: TIMESTAMPTZ, Default `now()`, Not Null
+   - `updated_at`: TIMESTAMPTZ, Default `now()`, OnUpdate `now()`, Not Null
+
+4. **`refresh_tokens`**:
+   - `id`: UUID (Primary Key)
+   - `user_id`: UUID, Foreign Key (`users.id`, `ON DELETE CASCADE`), Not Null
+   - `token_hash`: VARCHAR(255), Unique, Not Null, Indexed
+   - `expires_at`: TIMESTAMPTZ, Not Null
+   - `revoked_at`: TIMESTAMPTZ, Nullable (NULL = Active; Non-null = Revoked)
+   - `created_at`: TIMESTAMPTZ, Default `now()`, Not Null
 
 ---
 
-## 5. Authentication & Authorization Flow
+## 4. Backend Architecture & Authentication Pipeline
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Patient or Hospital Admin
-    participant Client as Web / Mobile App
-    participant API as FastAPI Backend (/api/v1/auth)
-    participant DB as PostgreSQL Database
+The backend implements a decoupled, testable **Layered Async Architecture**:
 
-    Note over User, DB: 1. Registration Flow
-    User->>Client: Enters Registration Details + Role Selection
-    Client->>API: POST /api/v1/auth/register (Email, Password, Role, Initial Profile)
-    API->>API: Validate input with Pydantic & Hash password (Argon2id/bcrypt)
-    API->>DB: Check email uniqueness -> Insert User -> Insert Patient/Hospital Profile
-    DB-->>API: User & Profile Created
-    API-->>Client: 201 Created (User details, excludes password_hash)
-
-    Note over User, DB: 2. Login Flow
-    User->>Client: Enters Email & Password
-    Client->>API: POST /api/v1/auth/login (Email, Password)
-    API->>DB: Query User by Email
-    API->>API: Verify Password Hash
-    API->>API: Generate Access Token (short-lived, e.g., 30m) & Refresh Token (e.g., 7d)
-    API->>DB: Persist Refresh Token Hash
-    API-->>Client: 200 OK (access_token, refresh_token, token_type: bearer, user: {id, email, role})
-    Client->>Client: Store Access Token in Memory/Storage; Refresh Token in SecureStore / HttpOnly Cookie
-
-    Note over User, DB: 3. Authenticated Request with Role Check
-    Client->>API: GET /api/v1/patients/me (Header: Authorization: Bearer <access_token>)
-    API->>API: Decode JWT -> Verify Signature & Expiry -> Extract user_id & role
-    API->>API: Role Guard Check: Ensure role == PATIENT (403 Forbidden if mismatched)
-    API->>DB: Fetch Patient Profile by user_id
-    API-->>Client: 200 OK (Patient Profile Data)
-
-    Note over User, DB: 4. Logout Flow
-    Client->>API: POST /api/v1/auth/logout (Refresh Token)
-    API->>DB: Mark Refresh Token as is_revoked = true
-    API-->>Client: 200 OK (Logged out successfully)
-    Client->>Client: Clear local token storage
+```
+[ HTTP Requests from Web & Mobile ]
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│  FastAPI Application & Middlewares                          │
+│  - CORS Middleware (origins: localhost:5173, 5174, etc.)    │
+│  - Global Exception Handlers (Standard Error Envelopes)     │
+│  - Pydantic v2 Request Validation & Response Serialization   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Dependency Injection Layer (app/api/deps.py)               │
+│  - get_async_db: Scoped AsyncSession generator              │
+│  - get_current_user: JWT validation & user extraction       │
+│  - require_role: Higher-order RBAC dependency               │
+│    (e.g., require_role(UserRole.PATIENT))                   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Service Layer (app/services/)                              │
+│  - AuthService: Registration, password verification,        │
+│    JWT pair generation, refresh token rotation & revocation │
+│  - PatientService: Patient profile retrieval & update       │
+│  - HospitalService: Hospital profile retrieval & update     │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Data Layer (SQLAlchemy 2.0 Async + asyncpg)                │
+│  - AsyncSession transactions (commit / rollback)            │
+│  - Mapped declarative models                                │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│  PostgreSQL 18 Database Engine                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 6. Client-to-Backend Communication Strategy
-
-All three frontend clients communicate with the centralized FastAPI server over **REST JSON APIs**:
-
-### 1. Web Clients (Patient Web & Hospital Web)
-- **HTTP Client**: Axios instance configured with base URL (e.g. `http://localhost:8000/api/v1`).
-- **Interceptors**:
-  - **Request Interceptor**: Automatically attaches `Authorization: Bearer <access_token>` to headers if token is present.
-  - **Response Interceptor**: Intercepts `401 Unauthorized`. If token expired, invokes `/auth/refresh` silently to obtain a new access token, then retries the failed request. If refresh fails, triggers logout and redirects to `/login`.
-- **CORS Configuration**: FastAPI `CORSMiddleware` configured with explicit allowed origins (`http://localhost:5173`, `http://localhost:5174`, etc.) and credentials support.
-
-### 2. Mobile Client (Patient Mobile / Expo)
-- **Network Resolution**: Mobile devices / emulators cannot reach host `localhost` directly:
-  - Android Emulator: `http://10.0.2.2:8000/api/v1`
-  - Physical Device / Expo Go on LAN: `http://<HOST_LAN_IP>:8000/api/v1`
-  - iOS Simulator: `http://localhost:8000/api/v1`
-- **Environment Config**: Handled via `.env` / `expo-constants` for seamless environment switching.
-- **Secure Token Storage**: Tokens stored securely using `expo-secure-store` (backed by iOS Keychain and Android Keystore) instead of unencrypted AsyncStorage.
+### Security & Cryptographic Decisions:
+1. **Password Hashing**: Implemented via `pwdlib[argon2]` using Argon2id algorithm. No legacy `passlib` or deprecated `crypt` bindings are used, ensuring 100% compatibility with modern Python runtimes (Python 3.13 / 3.14).
+2. **JWT Structure**:
+   - **Access Token**: Short-lived (15–30 minutes). Payload claims: `sub` (user_id), `role` (`PATIENT` or `HOSPITAL`), `exp`, `iat`, `type="access"`.
+   - **Refresh Token**: Long-lived (7 days). Secure cryptographically random string or UUID; its SHA-256 hash is persisted in `refresh_tokens`.
+3. **Token Rotation & Invalidation**:
+   - On `/auth/refresh`, the old refresh token is marked with `revoked_at = now()` and a new token pair is minted.
+   - On `/auth/logout`, the refresh token is immediately marked `revoked_at = now()`.
 
 ---
 
-## 7. Dependencies Matrix
+## 5. API Endpoints & Request/Response Contracts
+
+All API endpoints reside under `/api/v1`:
+
+### 1. Authentication Endpoints (`/api/v1/auth`)
+
+| Endpoint | Method | Role Required | Request Body | Response | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `/auth/patient/register` | `POST` | Public | `PatientRegisterRequest` (`email`, `password`, `full_name`, `phone`, `date_of_birth`, `gender`) | `201 Created` (`user_id`, `email`, `role`, `profile`) | Registers a new patient user + patient profile in one atomic transaction. |
+| `/auth/hospital/register` | `POST` | Public | `HospitalRegisterRequest` (`email`, `password`, `hospital_name`, `phone`, `address`, `city`, `state`) | `201 Created` (`user_id`, `email`, `role`, `hospital`) | Registers a new hospital user + hospital profile in one atomic transaction. |
+| `/auth/login` | `POST` | Public | `LoginRequest` (`email`, `password`) | `200 OK` (`access_token`, `refresh_token`, `token_type`, `user`: `{id, email, role}`) | Validates credentials; returns JWT token pair & user info. |
+| `/auth/refresh` | `POST` | Public | `RefreshRequest` (`refresh_token`) | `200 OK` (`access_token`, `refresh_token`, `token_type`) | Rotates tokens; revokes old refresh token and issues new pair. |
+| `/auth/logout` | `POST` | Authenticated | `RefreshRequest` (`refresh_token`) | `200 OK` (`{"detail": "Logged out successfully"}`) | Revokes the refresh token in the database. |
+
+### 2. Patient Profile Endpoints (`/api/v1/patients`)
+
+| Endpoint | Method | Role Required | Request Body | Response | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `/patients/me` | `GET` | `PATIENT` | None | `200 OK` (`PatientProfileOut`) | Returns the authenticated patient's profile details. |
+| `/patients/me` | `PUT` | `PATIENT` | `PatientProfileUpdate` | `200 OK` (`PatientProfileOut`) | Updates the authenticated patient's profile details. |
+
+### 3. Hospital Profile Endpoints (`/api/v1/hospitals`)
+
+| Endpoint | Method | Role Required | Request Body | Response | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `/hospitals/me` | `GET` | `HOSPITAL` | None | `200 OK` (`HospitalProfileOut`) | Returns the authenticated hospital's profile details. |
+| `/hospitals/me` | `PUT` | `HOSPITAL` | `HospitalProfileUpdate` | `200 OK` (`HospitalProfileOut`) | Updates the authenticated hospital's profile details. |
+
+---
+
+## 6. Frontend Client Architectures
+
+### 1. Patient Web Application (`clients/patient-web`)
+- **Framework**: React + TypeScript + Vite.
+- **Server State Management**: `@tanstack/react-query` (TanStack Query) for efficient caching, query invalidation, and data fetching of profile data.
+- **Authentication State**: Simple React Context (`AuthContext`) managing current user object, access token, and login/logout state.
+- **Routing**: `react-router-dom` with `ProtectedRoute` component restricting access to authenticated users with `role === "PATIENT"`.
+- **UI Design System**: Vanilla CSS tokens with modern CSS variables (Calm Medical Palette: slate, oceanic blue, soft emerald, clean typography).
+
+### 2. Hospital Web Application (`clients/hospital-web`)
+- **Framework**: React + TypeScript + Vite.
+- **Server State Management**: `@tanstack/react-query` for hospital profile queries and mutations.
+- **Authentication State**: Simple React Context (`AuthContext`) enforcing `role === "HOSPITAL"`.
+- **Routing**: `react-router-dom` with `ProtectedRoute` preventing access from non-hospital or unauthenticated users.
+- **UI Design System**: Vanilla CSS tokens tailored for administrative clinical dashboards (Slate, teal, navy, glassmorphic card containers).
+
+### 3. Patient Mobile Application (`clients/patient-mobile`)
+- **Framework**: React Native + Expo + TypeScript.
+- **Navigation**: `@react-navigation/native` with `@react-navigation/native-stack` (`AuthStack` for Login/Register, `AppStack` with Bottom Tabs for Home and Profile).
+- **Secure Token Storage**: `expo-secure-store` for hardware-backed encryption (iOS Keychain / Android Keystore) for storing the JWT access and refresh tokens.
+- **Dynamic Host Discovery**: Dynamic API base URL configuration module using `Constants.expoConfig?.hostUri` / environment variable to automatically route to local machine LAN IP, Android Emulator (`10.0.2.2`), or iOS Simulator (`localhost`).
+
+---
+
+## 7. Technology Stack & Dependencies Matrix
 
 ### Backend Dependencies (`backend/requirements.txt`)
-- `fastapi>=0.115.0`: Modern, high-performance web framework for APIs.
-- `uvicorn[standard]>=0.32.0`: ASGI web server implementation.
-- `sqlalchemy>=2.0.35`: Declarative Python SQL toolkit and ORM.
-- `alembic>=1.13.3`: Lightweight database migration tool for SQLAlchemy.
-- `psycopg2-binary>=2.9.10` / `asyncpg`: PostgreSQL database adapter.
-- `pydantic[email]>=2.9.0`: Data parsing and validation with email regex validation.
-- `pydantic-settings>=2.5.0`: Settings management from environment variables.
-- `pyjwt[crypto]>=2.9.0`: JSON Web Token encoding, decoding, and signature verification.
-- `passlib[bcrypt,argon2]>=1.7.4` and `argon2-cffi>=23.1.0`: Modern, secure password hashing.
-- `python-multipart>=0.0.12`: Parsing form data for OAuth2/FastAPI auth compatibility.
-- `pytest>=8.3.0`, `httpx>=0.27.0`: Testing framework and test client for async APIs.
+- `fastapi>=0.115.0`: ASGI Web framework for building APIs.
+- `uvicorn[standard]>=0.32.0`: High-performance ASGI web server.
+- `sqlalchemy>=2.0.35`: Modern async declarative SQL toolkit and ORM.
+- `asyncpg>=0.30.0`: High-speed asynchronous PostgreSQL database client.
+- `alembic>=1.13.3`: Database schema migration tool.
+- `pydantic[email]>=2.9.0`: Data parsing and validation with email string validation.
+- `pydantic-settings>=2.5.0`: Settings management from `.env` files.
+- `pyjwt[crypto]>=2.9.0`: Secure JSON Web Token encoding and decoding.
+- `pwdlib[argon2]>=0.2.1`: Modern password hashing with Argon2id algorithm.
+- `python-multipart>=0.0.12`: Form data parsing.
+- `pytest>=8.3.0`, `pytest-asyncio>=0.24.0`, `httpx>=0.27.0`: Async testing suite and HTTP test client.
 
 ### Patient Web & Hospital Web Dependencies (`clients/patient-web`, `clients/hospital-web`)
 - `react`, `react-dom` (`^19.0.0` or `^18.3.1`)
 - `typescript` (`^5.6.0`)
 - `vite` (`^6.0.0`)
-- `react-router-dom` (`^7.0.0` or `^6.28.0`): Client-side routing and protected routes.
-- `axios` (`^1.7.0`): HTTP requests with interceptors.
-- `lucide-react`: Modern, lightweight icons.
-- CSS: Vanilla CSS / Modern CSS variables design system for a sleek medical aesthetic.
+- `@tanstack/react-query` (`^5.60.0`): Server-state caching and synchronization.
+- `react-router-dom` (`^7.0.0` or `^6.28.0`): Client-side routing.
+- `axios` (`^1.7.0`): HTTP requests with token interceptors.
+- `lucide-react`: Modern UI icon set.
 
 ### Patient Mobile Dependencies (`clients/patient-mobile`)
 - `expo` (`~52.0.0`)
 - `react-native`
 - `typescript`
+- `@tanstack/react-query` (`^5.60.0`)
 - `@react-navigation/native`, `@react-navigation/native-stack`, `@react-navigation/bottom-tabs`
-- `expo-secure-store`: Hardware-backed secure storage for JWTs.
-- `axios`: HTTP client configured for mobile network environments.
-- `lucide-react-native` or `@expo/vector-icons`.
+- `expo-secure-store`: Hardware-backed secure storage for credentials.
+- `axios`: HTTP client.
+- `@expo/vector-icons` or `lucide-react-native`.
 
 ---
 
-## 8. Architectural Risks, Pitfalls & Mitigation Strategies
+## 8. Security, Validation & Role Separation Rules
 
-| Risk / Problem | Impact | Architectural Mitigation |
-| :--- | :--- | :--- |
-| **Cross-Role Privilege Escalation** | Patient accessing Hospital endpoints or vice-versa | Strict RBAC via `require_role()` dependency on every domain router. The user's role is embedded in the signed JWT and re-verified on each request. |
-| **Insecure Token Storage on Web** | XSS attacks stealing JWTs from localStorage | Token storage isolated in React Context with short expiry (15-30m access tokens); Refresh tokens rotated and invalidated on logout in the DB. |
-| **Mobile Network Host Binding** | Expo app unable to connect to `localhost:8000` | Configurable base URL module that selects LAN IP / `10.0.2.2` dynamically with clear setup instructions. |
-| **Python 3.14 Compatibility** | Some legacy hashing libraries (old passlib bcrypt bindings) have issues with Python 3.14 `crypt` removal | Use `argon2-cffi` or direct `bcrypt` package with modern `hashlib` bindings to ensure smooth execution on Python 3.14. |
-| **Schema Drift & Untracked DB Changes** | Divergence between SQLAlchemy models and PostgreSQL database | Strict use of Alembic migrations from day one. No manual `CREATE TABLE` queries. |
-| **CORS Preflight Failures** | Web dashboards blocked from communicating with FastAPI | Explicit CORS middleware in FastAPI configured with regex matching and credentials support. |
+1. **Password Safety**: Passwords are never stored in plaintext. They are hashed using Argon2id with automatic salt generation before persisting to PostgreSQL.
+2. **Zero Password Hash Leakage**: Pydantic response models (`UserOut`, `TokenResponse`, `PatientProfileOut`, `HospitalProfileOut`) strictly omit `password_hash`.
+3. **Environment Isolation**:
+   - `.env` files and sensitive credentials are in `.gitignore`.
+   - Backend loads secrets via `pydantic-settings` from environment variables.
+   - `.env.example` templates contain only non-secret dummy defaults.
+4. **Data Validation on Both Layers**:
+   - Frontend validates email format, password complexity, and required fields before submission.
+   - Backend re-validates all payloads strictly using Pydantic v2 schemas and database constraints.
+5. **Strict RBAC & Route Isolation**:
+   - Role claims (`role`) are cryptographically sealed in JWT payloads.
+   - Backend dependency `require_role(allowed_roles)` rejects mismatched access with `403 Forbidden`.
+   - Frontend `ProtectedRoute` redirects unauthorized roles (e.g., patient attempting to load hospital portal).
+6. **No Medical Data in GitHub**:
+   - Only structural schemas and seed scripts with synthetic test data are committed.
 
 ---
 
-## 9. Phased Implementation Roadmap
+## 9. 13-Step Sequential Implementation Roadmap
 
 ```mermaid
 gantt
-    title Clinova Phase 1 Foundation Roadmap
-    dateFormat  YYYY-MM-DD
-    section Backend & DB
-    Phase 1: Project Setup & Monorepo Init       :p1, 2026-08-25, 1d
-    Phase 2: Database Schema & Alembic Migrations :p2, after p1, 1d
-    Phase 3: Core FastAPI Auth & RBAC Endpoints  :p3, after p2, 1d
-    section Web Clients
-    Phase 4: Hospital Web Dashboard (Auth & Profile) :p4, after p3, 1d
-    Phase 5: Patient Web Application (Auth & Profile) :p5, after p4, 1d
-    section Mobile Client & QA
-    Phase 6: Patient Mobile App (Expo & Secure Auth)  :p6, after p5, 1d
-    Phase 7: End-to-End Verification & Documentation :p7, after p6, 1d
+    title Clinova Phase 1 Implementation Order
+    dateFormat  X
+    axisFormat  Step %s
+    
+    section Foundation & Database
+    Step 1: Monorepo Structure Init           :active, s1, 0, 1
+    Step 2: Backend Foundation & Config        :s2, after s1, 1
+    Step 3: PostgreSQL Async Connection Setup  :s3, after s2, 1
+    Step 4: SQLAlchemy 2.0 Async Models        :s4, after s3, 1
+    Step 5: Alembic Migrations Init & Baseline :s5, after s4, 1
+    
+    section Backend Auth Services & APIs
+    Step 6: Auth & Security Services (Argon2, JWT) :s6, after s5, 1
+    Step 7: Patient Registration & Profile API     :s7, after s6, 1
+    Step 8: Hospital Registration & Profile API    :s8, after s7, 1
+    
+    section Frontend Client Implementations
+    Step 9: Patient Web Portal (Vite + React)      :s9, after s8, 1
+    Step 10: Hospital Web Dashboard (Vite + React) :s10, after s9, 1
+    Step 11: Patient Mobile App (Expo)             :s11, after s10, 1
+    
+    section Testing & Verification
+    Step 12: End-to-End Integration Testing        :s12, after s11, 1
+    Step 13: Documentation & Project Cleanup       :s13, after s12, 1
 ```
 
-### Phase Details:
+### Detailed Steps:
 
-- **Phase 1: Monorepo Foundation & Workspace Setup**
-  - Initialize project root files (`.gitignore`, `.editorconfig`, root `README.md`).
-  - Create directory skeleton (`backend/`, `clients/patient-web/`, `clients/hospital-web/`, `clients/patient-mobile/`, `docs/`).
-
-- **Phase 2: Database Layer & Migrations**
-  - Configure PostgreSQL connection in `backend/app/core/config.py` and `backend/app/db/session.py`.
-  - Create SQLAlchemy models: `User`, `PatientProfile`, `HospitalProfile`, `RefreshToken`.
-  - Initialize Alembic and generate baseline migration script `001_initial_auth_and_profiles.py`.
-
-- **Phase 3: FastAPI Backend Services & Endpoints**
-  - Implement security utils (password hashing, JWT creation/verification).
-  - Build Pydantic schemas for auth, registration, and profiles.
-  - Implement `auth_service`, `patient_service`, and `hospital_service`.
-  - Build endpoints: `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`, `/api/v1/patients/me`, `/api/v1/hospitals/me`.
-  - Write automated tests with `pytest` and `httpx`.
-
-- **Phase 4: Hospital Web Dashboard (React + TypeScript + Vite)**
-  - Initialize Vite app in `clients/hospital-web`.
-  - Build modern healthcare UI design system (Tailored slate/teal color palette, typography, glassmorphic layout).
-  - Implement AuthContext, ProtectedRoute, Hospital Login & Registration forms.
-  - Implement Hospital Dashboard home and Facility Profile view/editor.
-
-- **Phase 5: Patient Web Application (React + TypeScript + Vite)**
-  - Initialize Vite app in `clients/patient-web`.
-  - Build patient portal design system (Calm blue/emerald theme, modern cards).
-  - Implement AuthContext, ProtectedRoute, Patient Login & Registration.
-  - Implement Patient Home Dashboard & Personal Health Profile view/editor.
-
-- **Phase 6: Patient Mobile Application (React Native + Expo + TypeScript)**
-  - Initialize Expo project in `clients/patient-mobile`.
-  - Configure navigation (AuthStack, AppStack with tab bars).
-  - Integrate `expo-secure-store` for token handling.
-  - Implement Mobile Login, Register, Home, and Profile screens.
-
-- **Phase 7: Comprehensive Integration Testing & Verification**
-  - Verify complete auth lifecycle across all 3 clients against the live FastAPI backend & PostgreSQL.
-  - Verify cross-role rejection (Hospital cannot log in on Patient app; Patient cannot access Hospital Dashboard).
-  - Verify token refresh and revocation on logout.
-  - Create comprehensive developer documentation and startup scripts.
-
----
-
-## 10. Verification & Quality Assurance Plan
-
-### Automated Verification
-1. **Backend Unit & Integration Tests**:
-   - `pytest backend/tests/test_auth.py`: Tests user registration, duplicate emails, password validation, login, token refresh, and logout.
-   - `pytest backend/tests/test_profiles.py`: Tests role-based access control (RBAC), patient profile retrieval/update, hospital profile retrieval/update, cross-role forbidden (403) responses.
-2. **Frontend Type Checking & Builds**:
-   - `npm run build` in `clients/patient-web` and `clients/hospital-web`.
-   - `npx tsc --noEmit` in `clients/patient-mobile`.
-
-### Manual & Interactive End-to-End Verification
-1. Register a new Patient via Patient Web -> Login -> Verify Patient Profile -> Update phone and DOB -> Logout.
-2. Register a new Hospital via Hospital Web -> Login -> Verify Hospital Profile & Bed Capacity -> Update contact info -> Logout.
-3. Attempt to log in with Patient credentials on Hospital Dashboard -> Verify access is denied with proper role error.
-4. Launch Patient Mobile app -> Login with created patient account -> Verify profile synchronization with backend.
-
----
-
-## User Review & Decision Points
-
-> [!IMPORTANT]
-> **Awaiting Your Approval**:
-> Please review this architecture plan. We will NOT create or modify any code files until you provide your explicit confirmation and feedback.
-> Once approved, we will proceed systematically through Phase 1 to Phase 7.
+1. **Step 1: Monorepo Structure Setup**
+   - Create root workspace configuration, `.gitignore`, `.editorconfig`, and directory structure (`backend/`, `clients/patient-web/`, `clients/hospital-web/`, `clients/patient-mobile/`, `docs/`).
+2. **Step 2: Backend Foundation**
+   - Create `backend/pyproject.toml` / `requirements.txt`.
+   - Setup `backend/app/core/config.py` using `pydantic-settings`.
+   - Setup `backend/app/main.py` with FastAPI app factory, CORS middleware, and root health check `/health`.
+3. **Step 3: PostgreSQL Connection**
+   - Configure async engine and session factory (`create_async_engine`, `async_sessionmaker`) in `backend/app/db/session.py`.
+   - Implement `get_async_db` generator in `backend/app/api/deps.py`.
+4. **Step 4: SQLAlchemy Models**
+   - Implement declarative models in `backend/app/models/`:
+     - `User` (`models/user.py`)
+     - `PatientProfile` (`models/patient.py`)
+     - `Hospital` (`models/hospital.py`)
+     - `RefreshToken` (`models/refresh_token.py`)
+5. **Step 5: Alembic Migrations**
+   - Initialize Alembic with `alembic init -t async alembic`.
+   - Configure `alembic/env.py` with SQLAlchemy async engine and declarative metadata.
+   - Generate and apply initial migration `001_initial_phase1_auth.py`.
+6. **Step 6: Authentication Services**
+   - Implement password hashing with `pwdlib[argon2]` in `backend/app/core/security.py`.
+   - Implement JWT token generation, signature verification, and decode helpers.
+   - Implement `AuthService` in `backend/app/services/auth_service.py` (login, password verify, refresh token rotation, logout).
+7. **Step 7: Patient Authentication & Profile API**
+   - Implement Pydantic schemas in `backend/app/schemas/patient.py`.
+   - Build `/api/v1/auth/patient/register` and `/api/v1/patients/me` (GET, PUT) endpoints with `require_role(UserRole.PATIENT)`.
+8. **Step 8: Hospital Authentication & Profile API**
+   - Implement Pydantic schemas in `backend/app/schemas/hospital.py`.
+   - Build `/api/v1/auth/hospital/register` and `/api/v1/hospitals/me` (GET, PUT) endpoints with `require_role(UserRole.HOSPITAL)`.
+9. **Step 9: Patient Web Application**
+   - Scaffold `clients/patient-web` with Vite + React + TypeScript.
+   - Setup Vanilla CSS design tokens (Calm Medical Blue/Slate).
+   - Configure TanStack Query, AuthContext, Axios interceptors, and protected routes.
+   - Implement Patient Register, Login, Protected Home, and Profile view/edit screens.
+10. **Step 10: Hospital Web Application**
+    - Scaffold `clients/hospital-web` with Vite + React + TypeScript.
+    - Setup Vanilla CSS design tokens (Clinical Teal/Navy/Slate).
+    - Configure TanStack Query, AuthContext, Axios interceptors, and protected routes.
+    - Implement Hospital Register, Login, Protected Dashboard Home, and Facility Profile view/edit screens.
+11. **Step 11: Patient Mobile Application**
+    - Scaffold `clients/patient-mobile` with Expo + React Native + TypeScript.
+    - Configure `@react-navigation`, `expo-secure-store`, and dynamic LAN/Emulator host resolver.
+    - Implement Mobile Login, Register, Protected Home, and Profile screens.
+12. **Step 12: Integration Testing & Verification**
+    - Run automated backend async test suite (`pytest backend/tests/test_auth.py`, `pytest backend/tests/test_profiles.py`).
+    - Verify role rejection (Hospital credentials rejected on Patient web/mobile; Patient credentials rejected on Hospital web).
+    - Verify token refresh rotation and logout token invalidation.
+13. **Step 13: Documentation & Cleanup**
+    - Update root `README.md` and `docs/` with developer setup commands, environment variables reference, and run scripts.

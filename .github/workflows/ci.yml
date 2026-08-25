@@ -1,0 +1,67 @@
+name: Clinova CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-lint-and-test:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Backend Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+
+      - name: Run Backend Tests
+        run: |
+          if [ -d backend/tests ]; then pytest backend/tests; fi
+        env:
+          ENVIRONMENT: test
+
+  frontend-patient-web:
+    name: Patient Web CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: clients/patient-web/package.json
+
+      - name: Build Patient Web
+        run: |
+          cd clients/patient-web
+          if [ -f package.json ]; then npm ci && npm run build; fi
+
+  frontend-hospital-web:
+    name: Hospital Web CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: clients/hospital-web/package.json
+
+      - name: Build Hospital Web
+        run: |
+          cd clients/hospital-web
+          if [ -f package.json ]; then npm ci && npm run build; fi
