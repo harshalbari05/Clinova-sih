@@ -1,6 +1,7 @@
 import pytest
-from app.main import app
 from httpx import ASGITransport, AsyncClient
+
+from app.main import app
 
 
 @pytest.mark.asyncio
@@ -25,3 +26,16 @@ async def test_root_endpoint():
         data = response.json()
         assert data["name"] == "Clinova API"
         assert data["health"] == "/api/v1/health"
+
+
+@pytest.mark.asyncio
+async def test_db_health_endpoint():
+    """Verify GET /api/v1/health/db returns status format."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get("/api/v1/health/db")
+        assert response.status_code == 200
+        data = response.json()
+        assert "status" in data
+        assert "database" in data
