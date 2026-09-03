@@ -51,11 +51,23 @@ class Settings(BaseSettings):
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    # JWT & Security Placeholders (Configured in Step 6)
+    # JWT & Security Configuration
+    JWT_SECRET_KEY: str | None = None
+    JWT_ALGORITHM: str = "HS256"
     SECRET_KEY: str = "temporary_dev_secret_key_change_in_production_32bytes"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    @property
+    def jwt_secret(self) -> str:
+        """Resolve active JWT secret key with fallback to legacy SECRET_KEY."""
+        return self.JWT_SECRET_KEY or self.SECRET_KEY
+
+    @property
+    def jwt_algorithm(self) -> str:
+        """Resolve active JWT algorithm with fallback to legacy ALGORITHM."""
+        return self.JWT_ALGORITHM or self.ALGORITHM
 
     model_config = SettingsConfigDict(
         env_file=".env",

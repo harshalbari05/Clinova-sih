@@ -56,15 +56,11 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
-
-from sqlalchemy.exc import SQLAlchemyError
-
-
 async def check_db_connectivity() -> bool:
     """Verify live asynchronous database connectivity."""
     try:
         async with async_session_factory() as session:
             result = await session.execute(text("SELECT 1"))
             return result.scalar() == 1
-    except (SQLAlchemyError, OSError):
+    except Exception:  # noqa: BLE001
         return False
