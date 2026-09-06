@@ -19,8 +19,14 @@ Architecture:
           ↓
     raise AIProviderError (last error)
 
-Fallback behaviour:
-    - Maximum MAX_ATTEMPTS (3) total provider attempts.
+Fallbacks and provider priority:
+    - Normal production default is Gemini (or configured cloud provider).
+    - Provider chain order:
+        1. Task-specific provider override (if configured)
+        2. Configured AI_DEFAULT_PROVIDER (if task override was active and differs)
+        3. Configured AI_FALLBACK_PROVIDERS (Groq, OpenRouter)
+        4. Ollama (strictly the last-resort local fallback)
+    - Maximum MAX_ATTEMPTS (5) total provider attempts.
     - Non-retryable errors (AUTH_ERROR, INVALID_REQUEST) abort immediately
       without trying fallbacks.
     - Retryable errors (PROVIDER_UNAVAILABLE, RATE_LIMIT, TIMEOUT,
@@ -59,7 +65,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 5
 """Maximum total provider attempts (primary + fallbacks)."""
 
 # Maps AITaskType → the ai_settings attribute that overrides the default provider
@@ -95,8 +101,11 @@ class AITaskRouter:
         if attr:
             override = getattr(ai_settings, attr, None)
             if override:
-                return override.lower().strip()
-        return ai_settings.AI_DEFAULT_PROVIDER.lower().strip()
+                override_clean = str(override).lower().strip()
+                if override_clean:
+                    return override_clean
+        default_val = getattr(ai_settings, "AI_DEFAULT_PROVIDER", "gemini")
+        return (default_val or "gemini").lower().strip()
 
     def get_provider_for_task(self, task: AITaskType) -> "AIProvider":
         """Return the AIProvider instance for the given task.
@@ -118,11 +127,38 @@ class AITaskRouter:
     def _build_provider_chain(self, task: AITaskType) -> list[str]:
         """Build the ordered list of provider names to try.
 
-        Order: [primary] + AI_FALLBACK_PROVIDERS (deduplicated, capped at MAX_ATTEMPTS).
+        Order:
+        1. Task-specific provider (or AI_DEFAULT_PROVIDER if no override).
+        2. Configured AI_DEFAULT_PROVIDER (if task override was active and differs).
+        3. Configured AI_FALLBACK_PROVIDERS in order.
+        4. Ollama is always placed LAST in the fallback chain unless explicitly
+           selected as the primary provider.
         """
         primary = self.get_provider_name_for_task(task)
-        fallbacks = [p for p in ai_settings.AI_FALLBACK_PROVIDERS if p != primary]
-        chain = [primary, *fallbacks]
+        default = (
+            getattr(ai_settings, "AI_DEFAULT_PROVIDER", "gemini") or "gemini"
+        ).lower().strip()
+
+        chain: list[str] = [primary]
+
+        # If a task override was active and differs from default provider,
+        # try default provider next before other fallbacks
+        if default and default != primary and default not in chain:
+            chain.append(default)
+
+        # Normalise and append configured fallback providers
+        fallbacks = getattr(ai_settings, "AI_FALLBACK_PROVIDERS", []) or []
+        for p in fallbacks:
+            p_clean = str(p).lower().strip()
+            if p_clean and p_clean not in chain:
+                chain.append(p_clean)
+
+        # Ensure Ollama is NEVER attempted before configured cloud providers,
+        # unless developer explicitly selected Ollama as primary.
+        if primary != "ollama" and "ollama" in chain:
+            chain.remove("ollama")
+            chain.append("ollama")
+
         return chain[:MAX_ATTEMPTS]
 
     async def generate(

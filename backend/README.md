@@ -609,16 +609,19 @@ backend/app/ai/
 Add these to your `.env` file:
 
 ```env
-# Provider selection
-AI_DEFAULT_PROVIDER=ollama          # gemini | openai | ollama | groq | openrouter
+# Primary/default AI provider (cloud AI is normal default; Ollama is last fallback)
+AI_DEFAULT_PROVIDER=gemini          # gemini | openai | ollama | groq | openrouter
 
-# Per-task overrides (optional — comment out to use AI_DEFAULT_PROVIDER)
-# AI_HISTORY_INTERVIEW_PROVIDER=gemini
-# AI_STRUCTURED_EXTRACTION_PROVIDER=openai
-# AI_CLINICAL_SUMMARY_PROVIDER=gemini
+# Per-task overrides (override AI_DEFAULT_PROVIDER per task)
+AI_HISTORY_INTERVIEW_PROVIDER=gemini
+AI_STRUCTURED_EXTRACTION_PROVIDER=gemini
+AI_CLINICAL_SUMMARY_PROVIDER=gemini
+AI_DOCUMENT_ANALYSIS_PROVIDER=gemini
+AI_TRANSLATION_PROVIDER=gemini
+AI_TRIAGE_PROVIDER=gemini
 
-# Fallback chain (comma-separated, tried in order after primary fails)
-# AI_FALLBACK_PROVIDERS=ollama,openai
+# Ordered fallback chain (Ollama is intentionally the LAST fallback)
+AI_FALLBACK_PROVIDERS=groq,openrouter,ollama
 
 # Google Gemini
 # GEMINI_API_KEY=your_key_here
@@ -636,16 +639,16 @@ GROQ_MODEL=llama-3.3-70b-versatile
 # OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=openai/gpt-4o-mini
 
-# Ollama (local, no API key)
+# Ollama (local, no API key — last fallback or explicit local dev)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
 ```
 
 ### Provider Configuration Details
 
-#### Ollama (Local — Recommended for Development)
+#### Ollama (Local Development / Last-Resort Fallback)
 
-Ollama runs locally with no API key and no cost:
+Ollama serves as the final local fallback when cloud providers are unreachable, and can also be used directly for zero-cost, offline local development:
 
 ```bash
 # Install: https://ollama.ai
@@ -653,14 +656,14 @@ ollama pull llama3.2     # download model (~2GB)
 ollama serve             # start server (default: localhost:11434)
 ```
 
-Set in `.env`:
+To explicitly use Ollama for local development:
 ```env
 AI_DEFAULT_PROVIDER=ollama
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
 ```
 
-Ollama is **not contacted at startup** — only when a request is made.
+Ollama is **not contacted at startup** — only when an inference request is routed to it.
 
 #### Google Gemini
 
@@ -711,17 +714,25 @@ AI_TRANSLATION_PROVIDER=ollama             # local/private
 ```
 
 ### Fallback Mechanism
-
-The `AITaskRouter` implements a bounded fallback chain:
-
+ 
+The `AITaskRouter` implements a bounded fallback chain ensuring high availability:
+ 
 ```
-Primary Provider  ──(fail: retryable)──→  Fallback 1  ──(fail)──→  Fallback 2
-                                                                         ↓
-                                                              AIProviderError (surfaced)
+Task-Specific Provider
+         ↓ (retryable failure)
+Default Provider (Gemini)
+         ↓ (retryable failure)
+Groq
+         ↓ (retryable failure)
+OpenRouter
+         ↓ (retryable failure)
+Ollama (Final Local Fallback)
+         ↓ (exhaustion)
+AIProviderError (surfaced)
 ```
-
+ 
 **Error categories:**
-
+ 
 | Kind | Retryable | Description |
 |------|-----------|-------------|
 | `AUTH_ERROR` | ❌ No | Missing/invalid API key — operator action required |
@@ -731,13 +742,13 @@ Primary Provider  ──(fail: retryable)──→  Fallback 1  ──(fail)─�
 | `TIMEOUT` | ✅ Yes | Request timed out |
 | `MALFORMED_RESPONSE` | ✅ Yes | Provider returned unexpected format |
 | `UNEXPECTED_ERROR` | ✅ Yes | Catch-all |
-
+ 
 Configure fallbacks:
 ```env
-AI_FALLBACK_PROVIDERS=ollama,openai
+AI_FALLBACK_PROVIDERS=groq,openrouter,ollama
 ```
-
-Maximum 3 total attempts (bounded — never infinite retry).
+ 
+Maximum 5 total attempts (bounded — never infinite retry). Ollama is always placed last in the fallback chain unless explicitly selected as the primary provider.
 
 ### Adding a New Provider
 
@@ -754,4 +765,107 @@ No other files need to change. The application immediately supports `AI_DEFAULT_
 - Provider SDK objects never reach API endpoints or clinical schemas.
 - Ollama/provider endpoints are never exposed to the frontend — all AI calls go through the Clinova backend.
 - Clinical conversation content is not logged at the provider level.
+
+---
+
+## 14. Step 5B: Real AI Clinical History Interview Engine
+
+> [!IMPORTANT]
+> **Clinical Intake Boundary**: The AI is an information-gathering assistant ONLY.
+> It assists with clinical history collection and **DOES NOT provide diagnosis or treatment**.
+> All collected information is reviewed and confirmed by licensed physicians.
+
+### Architectural Overview
+
+```
+Patient Client
+     │  (POST /api/v1/ai-sessions/{session_id}/messages)
+     ▼
+FastAPI Route & Dependency Layer
+     │  (Verify JWT identity, verify consultation & session ownership)
+     ▼
+AI Message Service
+     │  (Persist patient message with sender="patient", transition to "in_progress")
+     ▼
+AI Interview Service (Real Adaptive Engine)
+     ├── 1. Build bounded conversation context (chronological)
+     ├── 2. Fetch current ClinicalHistory & derive InterviewState
+     ├── 3. Assemble safety-constrained system prompt + language
+     ├── 4. AITaskRouter (HISTORY_INTERVIEW) → AIProvider (Gemini/OpenAI/Ollama)
+     ├── 5. Pydantic parser & validation layer (ClinicalInterviewAIResponse)
+     ├── 6. Safe merge into ClinicalHistory (no overwriting existing data with null)
+     ├── 7. Server-controlled AI Message saved (sender="ai")
+     └── 8. Check completion criteria (core sections required)
+     ▼
+Enriched Backward-Compatible Response (AIInterviewMessageResponse)
+```
+
+### Key Components
+
+1. **Safety Constraints**:
+   - Explicit instructions in `app/ai/prompts/clinical_history.py` forbidding diagnosis, prescription, medical certainty, or fact fabrication.
+   - Uncertain patient statements are recorded as unconfirmed, self-reported concerns.
+   - The AI asks ONE focused question at a time.
+   - No diagnostic or medication fields exist in `ExtractedClinicalInfo`.
+
+2. **Full Conversation Context**:
+   - `build_conversation_context` loads recent messages chronologically (sender translated: `patient` → `user`, `ai` → `assistant`).
+   - Configurable bounded window via `AI_INTERVIEW_MAX_HISTORY_MESSAGES` (default: 20).
+   - Session isolation guarantees that messages from other patients are never retrieved or passed to the model.
+
+3. **Runtime Interview State**:
+   - `derive_interview_state` computes completed vs. missing sections purely from current `ClinicalHistory` without extra database tables.
+   - Priority section order: Chief Complaint → HPI → Past Medical → Past Surgical → Drug → Allergy → Family → Personal → Review of Systems.
+
+4. **Structured AI Response**:
+   - Schema defined in `app/ai/interview/schemas.py`:
+     ```json
+     {
+       "next_question": "When did your headache start?",
+       "extracted_information": {
+         "chief_complaint": "Headache",
+         "history_of_present_illness": "Frontal headache for 2 days"
+       },
+       "missing_information": ["severity", "associated nausea"],
+       "current_section": "history_of_present_illness",
+       "section_complete": false,
+       "interview_complete": false
+     }
+     ```
+   - Only non-None, patient-supported fields are updated into `ClinicalHistory`.
+
+5. **Multilingual Support**:
+   - Built-in instruction prompts for **English**, **Hindi**, and **Marathi**, driven by `AISession.language`.
+
+6. **Feature Flagging & Controlled Fallback**:
+   - `AI_INTERVIEW_ENABLED=true`: enables real LLM inference via the task router.
+   - `AI_INTERVIEW_ENABLED=false`: uses safe, conversational placeholder follow-up without invoking external providers.
+   - If all providers fail: the service catches `AIProviderError`, logs the failure safely, preserves the patient message, does not corrupt clinical history, and returns a safe fallback question.
+
+### Configuration
+
+Add to `.env`:
+```env
+# Step 5B Settings
+AI_INTERVIEW_ENABLED=true
+AI_INTERVIEW_MAX_HISTORY_MESSAGES=20
+```
+
+### Running Tests
+
+```powershell
+# Run the Step 5B interview engine tests
+.\.venv\Scripts\python.exe -m pytest tests/test_ai_interview.py -v
+
+# Run the complete test suite (all steps)
+.\.venv\Scripts\python.exe -m pytest -v
+```
+
+### Current Limitations (Deferred to Future Steps)
+- Red-flag detection and emergency triage (Step 6)
+- Physician summary generation (Step 7)
+- ABDM / FHIR data export
+- Voice input / speech-to-text / text-to-speech
+- Web frontend UI integration
+
 

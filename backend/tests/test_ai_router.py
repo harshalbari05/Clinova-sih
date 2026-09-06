@@ -357,8 +357,8 @@ async def test_retries_do_not_exceed_max_attempts():
     with patch("app.ai.router.ai_settings") as mock_settings:
         mock_settings.AI_DEFAULT_PROVIDER = "ollama"
         mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = None
-        # Provide many fallbacks — router should still cap at MAX_ATTEMPTS
-        mock_settings.AI_FALLBACK_PROVIDERS = ["p1", "p2", "p3", "p4", "p5"]
+        # Provide many fallbacks — router should still cap at MAX_ATTEMPTS (5)
+        mock_settings.AI_FALLBACK_PROVIDERS = ["p1", "p2", "p3", "p4", "p5", "p6", "p7"]
 
         with patch("app.ai.router.get_provider", return_value=failing_provider):
             with pytest.raises(AIProviderError):
@@ -367,7 +367,7 @@ async def test_retries_do_not_exceed_max_attempts():
                     request=make_request(),
                 )
 
-    assert call_count <= MAX_ATTEMPTS
+    assert call_count == MAX_ATTEMPTS
 
 
 @pytest.mark.asyncio
@@ -533,3 +533,193 @@ async def test_router_error_messages_do_not_expose_api_keys():
                 )
 
     assert fake_key not in exc_info.value.message
+
+
+# ---------------------------------------------------------------------------
+# 19–27: Provider Priority & Fallback Order (Task 8: Tests A–F + Normalization)
+# ---------------------------------------------------------------------------
+
+
+def test_test_a_provider_fallback_chain_order():
+    """Test A: AI_DEFAULT_PROVIDER=gemini, AI_FALLBACK_PROVIDERS=groq,openrouter,ollama.
+    Expected order: gemini → groq → openrouter → ollama.
+    """
+    router = AITaskRouter()
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = None
+        mock_settings.AI_FALLBACK_PROVIDERS = ["groq", "openrouter", "ollama"]
+
+        chain = router._build_provider_chain(AITaskType.HISTORY_INTERVIEW)
+
+    assert chain == ["gemini", "groq", "openrouter", "ollama"]
+    assert chain[-1] == "ollama"
+
+
+def test_test_b_task_specific_provider_selects_ollama_directly():
+    """Test B: AI_DEFAULT_PROVIDER=gemini, AI_HISTORY_INTERVIEW_PROVIDER=ollama.
+    Expected: ollama is selected directly for HISTORY_INTERVIEW.
+    """
+    router = AITaskRouter()
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = "ollama"
+        mock_settings.AI_FALLBACK_PROVIDERS = ["groq", "openrouter", "ollama"]
+
+        provider_name = router.get_provider_name_for_task(AITaskType.HISTORY_INTERVIEW)
+        chain = router._build_provider_chain(AITaskType.HISTORY_INTERVIEW)
+
+    assert provider_name == "ollama"
+    assert chain[0] == "ollama"
+
+
+def test_test_c_empty_task_specific_provider_uses_default():
+    """Test C: AI_DEFAULT_PROVIDER=gemini, AI_HISTORY_INTERVIEW_PROVIDER="".
+    Expected: gemini is selected for HISTORY_INTERVIEW.
+    """
+    router = AITaskRouter()
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = ""
+        mock_settings.AI_FALLBACK_PROVIDERS = ["groq", "openrouter", "ollama"]
+
+        provider_name = router.get_provider_name_for_task(AITaskType.HISTORY_INTERVIEW)
+        chain = router._build_provider_chain(AITaskType.HISTORY_INTERVIEW)
+
+    assert provider_name == "gemini"
+    assert chain == ["gemini", "groq", "openrouter", "ollama"]
+
+
+@pytest.mark.asyncio
+async def test_test_d_cloud_provider_retryable_error_attempts_next():
+    """Test D: Cloud provider fails with retryable error -> next configured provider is attempted."""
+    router = AITaskRouter()
+    attempts: list[str] = []
+
+    def make_mock(name: str):
+        mock = MagicMock()
+        if name == "gemini":
+            mock.generate = AsyncMock(
+                side_effect=make_provider_error(AIErrorKind.RATE_LIMIT, "gemini")
+            )
+        elif name == "groq":
+            async def groq_gen(req):
+                attempts.append("groq")
+                return make_response("groq success", "groq")
+            mock.generate = AsyncMock(side_effect=groq_gen)
+        else:
+            mock.generate = AsyncMock(return_value=make_response("ok", name))
+        return mock
+
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = None
+        mock_settings.AI_FALLBACK_PROVIDERS = ["groq", "openrouter", "ollama"]
+
+        with patch("app.ai.router.get_provider", side_effect=make_mock):
+            res = await router.generate(AITaskType.HISTORY_INTERVIEW, make_request())
+
+    assert res.provider == "groq"
+    assert res.text == "groq success"
+    assert "groq" in attempts
+
+
+@pytest.mark.asyncio
+async def test_test_e_openrouter_fails_triggers_ollama_last():
+    """Test E: OpenRouter fails -> Ollama is attempted only after earlier providers fail."""
+    router = AITaskRouter()
+    called_order: list[str] = []
+
+    def make_mock(name: str):
+        mock = MagicMock()
+        if name in ("gemini", "groq", "openrouter"):
+            async def failing_gen(req):
+                called_order.append(name)
+                raise make_provider_error(AIErrorKind.PROVIDER_UNAVAILABLE, name)
+            mock.generate = AsyncMock(side_effect=failing_gen)
+        elif name == "ollama":
+            async def ollama_gen(req):
+                called_order.append(name)
+                return make_response("ollama fallback success", "ollama")
+            mock.generate = AsyncMock(side_effect=ollama_gen)
+        return mock
+
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = None
+        mock_settings.AI_FALLBACK_PROVIDERS = ["groq", "openrouter", "ollama"]
+
+        with patch("app.ai.router.get_provider", side_effect=make_mock):
+            res = await router.generate(AITaskType.HISTORY_INTERVIEW, make_request())
+
+    assert called_order == ["gemini", "groq", "openrouter", "ollama"]
+    assert res.provider == "ollama"
+    assert res.text == "ollama fallback success"
+
+
+@pytest.mark.asyncio
+async def test_test_f_ollama_explicitly_selected_as_default():
+    """Test F: Ollama explicitly selected as default -> application still works and Ollama is primary."""
+    router = AITaskRouter()
+    mock_ollama = MagicMock()
+    mock_ollama.generate = AsyncMock(return_value=make_response("local response", "ollama"))
+
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "ollama"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = None
+        mock_settings.AI_FALLBACK_PROVIDERS = ["groq", "openrouter", "ollama"]
+
+        provider_name = router.get_provider_name_for_task(AITaskType.HISTORY_INTERVIEW)
+        chain = router._build_provider_chain(AITaskType.HISTORY_INTERVIEW)
+
+        with patch("app.ai.router.get_provider", return_value=mock_ollama):
+            res = await router.generate(AITaskType.HISTORY_INTERVIEW, make_request())
+
+    assert provider_name == "ollama"
+    assert chain[0] == "ollama"
+    assert res.provider == "ollama"
+    assert res.text == "local response"
+
+
+def test_ollama_moved_to_last_if_listed_early_in_fallbacks():
+    """If fallback list places ollama before cloud providers, router moves ollama to the end."""
+    router = AITaskRouter()
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = None
+        # Misconfigured fallback list with ollama in front
+        mock_settings.AI_FALLBACK_PROVIDERS = ["ollama", "groq", "openrouter"]
+
+        chain = router._build_provider_chain(AITaskType.HISTORY_INTERVIEW)
+
+    assert chain == ["gemini", "groq", "openrouter", "ollama"]
+    assert chain[-1] == "ollama"
+
+
+def test_task_override_different_from_default_includes_default_in_chain():
+    """If task override is groq and default is gemini, chain orders: groq → gemini → openrouter → ollama."""
+    router = AITaskRouter()
+    with patch("app.ai.router.ai_settings") as mock_settings:
+        mock_settings.AI_DEFAULT_PROVIDER = "gemini"
+        mock_settings.AI_HISTORY_INTERVIEW_PROVIDER = "groq"
+        mock_settings.AI_FALLBACK_PROVIDERS = ["openrouter", "ollama"]
+
+        chain = router._build_provider_chain(AITaskType.HISTORY_INTERVIEW)
+
+    assert chain == ["groq", "gemini", "openrouter", "ollama"]
+    assert chain[-1] == "ollama"
+
+
+def test_config_normalization_and_whitespace():
+    """Config normalizes provider names by trimming whitespace, lowercasing, and ignoring empty entries."""
+    from app.ai.config import AIConfig
+
+    cfg = AIConfig(
+        AI_DEFAULT_PROVIDER="  GEMINI  ",
+        AI_HISTORY_INTERVIEW_PROVIDER="  ",
+        AI_FALLBACK_PROVIDERS=" groq , , OPENROUTER , ollama ",
+    )
+    assert cfg.AI_DEFAULT_PROVIDER == "gemini"
+    assert cfg.AI_HISTORY_INTERVIEW_PROVIDER is None
+    assert cfg.AI_FALLBACK_PROVIDERS == ["groq", "openrouter", "ollama"]
+

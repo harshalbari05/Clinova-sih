@@ -13,7 +13,7 @@ Environment variables (all optional unless the relevant provider
 is the active selection for a task):
 
   AI provider selection:
-    AI_DEFAULT_PROVIDER           — fallback provider for all tasks (default: ollama)
+    AI_DEFAULT_PROVIDER           — fallback provider for all tasks (default: gemini)
     AI_HISTORY_INTERVIEW_PROVIDER — override for HISTORY_INTERVIEW task
     AI_STRUCTURED_EXTRACTION_PROVIDER
     AI_CLINICAL_SUMMARY_PROVIDER
@@ -21,8 +21,8 @@ is the active selection for a task):
     AI_TRANSLATION_PROVIDER
     AI_TRIAGE_PROVIDER
 
-  Fallbacks (comma-separated provider names):
-    AI_FALLBACK_PROVIDERS         — global fallback chain, e.g. "ollama,openai"
+  Fallbacks (comma-separated provider names; Ollama is always last):
+    AI_FALLBACK_PROVIDERS         — global fallback chain, e.g. "groq,openrouter,ollama"
 
   Gemini:
     GEMINI_API_KEY
@@ -68,8 +68,14 @@ class AIConfig(BaseSettings):
     # Provider selection
     # ------------------------------------------------------------------
 
-    AI_DEFAULT_PROVIDER: str = "ollama"
+    AI_DEFAULT_PROVIDER: str = "gemini"
     """Provider used for any task that doesn't have an explicit override."""
+
+    # Feature flags and interview engine tuning
+    AI_INTERVIEW_ENABLED: bool = True
+    """Enable real AI-powered clinical history interview engine."""
+    AI_INTERVIEW_MAX_HISTORY_MESSAGES: int = 20
+    """Maximum recent conversation messages included in LLM context."""
 
     # Per-task provider overrides (None = use AI_DEFAULT_PROVIDER)
     AI_HISTORY_INTERVIEW_PROVIDER: str | None = None
@@ -79,15 +85,52 @@ class AIConfig(BaseSettings):
     AI_TRANSLATION_PROVIDER: str | None = None
     AI_TRIAGE_PROVIDER: str | None = None
 
-    # Global fallback chain (tried in order after primary fails)
-    AI_FALLBACK_PROVIDERS: list[str] = []
+    # Global fallback chain (tried in order after primary fails; Ollama is last)
+    AI_FALLBACK_PROVIDERS: list[str] | str = ["groq", "openrouter", "ollama"]
+
+    @field_validator("AI_DEFAULT_PROVIDER", mode="before")
+    @classmethod
+    def normalize_default_provider(cls, v: str | None) -> str:
+        if not v or not str(v).strip():
+            return "gemini"
+        return str(v).strip().lower()
+
+    @field_validator(
+        "AI_HISTORY_INTERVIEW_PROVIDER",
+        "AI_STRUCTURED_EXTRACTION_PROVIDER",
+        "AI_CLINICAL_SUMMARY_PROVIDER",
+        "AI_DOCUMENT_ANALYSIS_PROVIDER",
+        "AI_TRANSLATION_PROVIDER",
+        "AI_TRIAGE_PROVIDER",
+        mode="before",
+    )
+    @classmethod
+    def normalize_task_provider(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = str(v).strip().lower()
+        return cleaned if cleaned else None
 
     @field_validator("AI_FALLBACK_PROVIDERS", mode="before")
     @classmethod
-    def parse_fallback_providers(cls, v: str | list[str]) -> list[str]:
+    def parse_fallback_providers(cls, v: str | list[str] | None) -> list[str]:
+        if v is None:
+            return ["groq", "openrouter", "ollama"]
         if isinstance(v, str):
-            return [p.strip() for p in v.split(",") if p.strip()]
-        return v if isinstance(v, list) else []
+            v_str = v.strip()
+            if v_str.startswith("[") and v_str.endswith("]"):
+                try:
+                    import json
+
+                    parsed = json.loads(v_str)
+                    if isinstance(parsed, list):
+                        return [str(p).strip().lower() for p in parsed if str(p).strip()]
+                except Exception:
+                    pass
+            return [p.strip().lower() for p in v_str.split(",") if p.strip()]
+        if isinstance(v, list):
+            return [str(p).strip().lower() for p in v if str(p).strip()]
+        return []
 
     # ------------------------------------------------------------------
     # Gemini

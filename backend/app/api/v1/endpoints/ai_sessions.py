@@ -29,6 +29,7 @@ import uuid
 
 from fastapi import APIRouter, Query, status
 
+from app.ai.interview.schemas import AIInterviewMessageResponse
 from app.api.deps import CurrentPatientDep, DatabaseDep
 from app.schemas.ai_message import AIMessageCreate, AIMessageListResponse, AIMessageResponse
 from app.schemas.ai_session import AISessionCreate, AISessionResponse
@@ -126,14 +127,13 @@ async def complete_ai_session(
 
 @router.post(
     "/ai-sessions/{session_id}/messages",
-    response_model=AIMessageResponse,
+    response_model=AIInterviewMessageResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Send Patient Message",
     description=(
-        "Adds a patient message to the AI interview session and triggers an "
-        "AI follow-up response (placeholder until LLM integration in a future step). "
-        "The sender is always set to 'patient' server-side — the client cannot "
-        "inject a different sender. Returns the stored patient message."
+        "Adds a patient message to the AI interview session and triggers the "
+        "AI interview engine to extract clinical facts, update clinical history, "
+        "and generate the next interview question. Returns the enriched result."
     ),
 )
 async def add_patient_message(
@@ -141,8 +141,8 @@ async def add_patient_message(
     payload: AIMessageCreate,
     current_patient: CurrentPatientDep,
     db: DatabaseDep,
-) -> AIMessageResponse:
-    """Add a patient message; store AI follow-up (placeholder)."""
+) -> AIInterviewMessageResponse:
+    """Add a patient message and process through the AI interview engine."""
     _user, patient = current_patient
 
     # Store the patient's message (sender forced to "patient" server-side)
@@ -150,16 +150,13 @@ async def add_patient_message(
         db, patient, session_id, payload
     )
 
-    # Generate and store the AI follow-up (placeholder — future LLM call)
-    await ai_interview_service.process_patient_message(
+    # Process through the real AI interview engine and return enriched result
+    return await ai_interview_service.process_patient_message(
         db=db,
         patient=patient,
         session_id=session_id,
         patient_message=patient_msg,
     )
-
-    # Return the patient's message (not the AI response)
-    return patient_msg
 
 
 @router.get(

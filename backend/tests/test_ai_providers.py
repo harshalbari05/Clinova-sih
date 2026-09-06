@@ -187,14 +187,16 @@ def test_ai_config_missing_openai_key_does_not_crash():
 
 
 def test_ai_config_all_optional_keys_missing_does_not_crash():
-    """AIConfig with no provider keys set does not raise."""
+    """AIConfig with no provider keys set does not raise and defaults to Gemini with Ollama last."""
     config = AIConfig(
         GEMINI_API_KEY=None,
         OPENAI_API_KEY=None,
         GROQ_API_KEY=None,
         OPENROUTER_API_KEY=None,
     )
-    assert config.AI_DEFAULT_PROVIDER == "ollama"
+    assert config.AI_DEFAULT_PROVIDER == "gemini"
+    assert "ollama" in config.AI_FALLBACK_PROVIDERS
+    assert config.AI_FALLBACK_PROVIDERS[-1] == "ollama"
 
 
 def test_ollama_base_url_configurable():
