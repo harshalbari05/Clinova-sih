@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     consultations,
     health,
     patients,
+    triage,
 )
 
 api_router = APIRouter()
@@ -24,6 +25,9 @@ api_router.include_router(patients.router, prefix="/patients", tags=["Patients"]
 api_router.include_router(
     consultations.router, prefix="/consultations", tags=["Consultations"]
 )
+
+# Triage and Red-Flag alerts (self-prefixed /consultations/{consultation_id}/...)
+api_router.include_router(triage.router, tags=["Triage & Red Flags"])
 
 # Clinical history endpoints (nested under consultations)
 api_router.include_router(

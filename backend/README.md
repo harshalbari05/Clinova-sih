@@ -504,11 +504,14 @@ curl -X PUT "http://localhost:8000/api/v1/consultations/{consultation_id}/histor
 | Step 2 | Patient Profile + Consultation Management | ✅ Complete |
 | Step 3 | Clinical History Foundation | ✅ Complete |
 | Step 4 | AI Clinical History Interview Foundation | ✅ Complete |
-| Step 5 | Document Upload (OCR) | 🔜 Not started |
-| Step 6 | Timeline & Summary | 🔜 Not started |
-| Step 7 | Hospital Review Dashboard | 🔜 Not started |
+| Step 5A | Multi-Provider AI Architecture (Gemini/OpenAI/Groq/Ollama) | ✅ Complete |
+| Step 5B | Real Adaptive AI Clinical History Interview Engine | ✅ Complete |
+| Step 6 | Red-Flag Detection & Emergency Triage Engine | ✅ Complete |
+| Step 7 | Physician Summary Generation | 🔜 Not started |
+| Step 8 | Document Upload (OCR) | 🔜 Not started |
+| Step 9 | Hospital Review Dashboard | 🔜 Not started |
 
-> Production LLM integration, speech-to-text, OCR document processing, and ABDM integration are **next stages**.
+> Production LLM integration, triage alerts, and clinical interview engines are active. OCR document processing, physician summaries, and ABDM integration are next stages.
 
 ---
 
@@ -862,10 +865,158 @@ AI_INTERVIEW_MAX_HISTORY_MESSAGES=20
 ```
 
 ### Current Limitations (Deferred to Future Steps)
-- Red-flag detection and emergency triage (Step 6)
 - Physician summary generation (Step 7)
+- Document Upload & OCR (Step 8)
+- Hospital Review Dashboard (Step 9)
 - ABDM / FHIR data export
 - Voice input / speech-to-text / text-to-speech
 - Web frontend UI integration
+
+---
+
+## 16. Step 6: Red-Flag Detection & Emergency Triage Engine
+
+> [!IMPORTANT]
+> **Clinical Safety Boundary**: Red-flag detection is a **clinical safety-support feature, NOT a diagnostic system**.
+> It NEVER provides medical diagnoses (e.g., "You have a heart attack" or "You have appendicitis") and NEVER provides medication or home treatment instructions.
+> Its sole clinical functions are:
+> 1. Rapidly flagging urgent/emergency clinical presentations for hospital staff attention.
+> 2. Returning a calm, non-alarming safety notice directing patients to seek immediate medical care when emergencies are detected.
+> 3. Creating structured, persistent hospital triage alerts in PostgreSQL.
+
+### Architecture & Safety Flow
+
+Clinova employs a **deterministic-authoritative triage model** where rules are the final authority and cannot be bypassed or downgraded by AI inference:
+
+```
+Patient Message / Clinical Intake
+             │
+             ▼
+     Optional AI Extraction
+     (Task: AITaskType.TRIAGE)
+     • Extracts clinical findings & quotes
+     • Bounded by provider timeout/circuit breaker
+     • AI cannot override or downgrade deterministic rules
+             │
+             ▼
+ Authoritative Deterministic Rule Engine
+ (DeterministicTriageDetector)
+     • Evaluates extracted evidence + raw message + clinical history
+     • Context-aware negation filtering ("no chest pain", "rules out shortness of breath")
+     • Evaluates 9 high-risk clinical categories:
+       - 1. Cardiovascular / Chest Pain
+       - 2. Respiratory / Breathing Distress
+       - 3. Neurological / Stroke / Deficits
+       - 4. Severe / Uncontrolled Bleeding
+       - 5. Acute Severe Abdominal Pain
+       - 6. Anaphylaxis / Severe Allergic Reactions
+       - 7. Altered Mental Status / Syncope
+       - 8. Immediate Self-Harm / Suicide Risk
+       - 9. High-Risk Obstetric / Pregnancy Complications
+             │
+             ▼
+     Structured TriageResult
+     (Urgency: NORMAL | URGENT | EMERGENCY_REVIEW)
+             │
+             ├─────────────────────────────────────────────────┐
+             ▼                                                 ▼
+ Post-Interview Response Guard                     PostgreSQL Alerts Store
+ • If EMERGENCY_REVIEW:                            • Synchronizes alerts to `alerts` table
+   Replaces AI message with calm safety notice:     • Deduplication by (consultation_id, alert_type)
+   "Some of the symptoms you reported may need      • Real-time visibility for hospital triage desk
+    urgent medical attention. Please inform the
+    hospital triage staff immediately or proceed
+    to the nearest emergency department."
+ • If NORMAL / URGENT:
+   Interview continues normal clinical inquiry
+```
+
+### High-Priority Red-Flag Categories
+
+| Category | Typical Indicators | Urgency Level | Recommended Clinical Action |
+| :--- | :--- | :--- | :--- |
+| **Cardiovascular** | Crushing/radiating chest pain, pressure with sweating | `EMERGENCY_REVIEW` | Immediate triage evaluation & ECG |
+| **Respiratory** | Severe breathlessness, gasping, stridor, cyanosis | `EMERGENCY_REVIEW` | Immediate airway & oxygenation assessment |
+| **Neurological** | Facial droop, arm weakness, slurred speech, sudden confusion | `EMERGENCY_REVIEW` | Immediate stroke protocol activation |
+| **Hemorrhage** | Vomiting blood, coughing blood, black tarry stools | `EMERGENCY_REVIEW` | Immediate hemodynamic & hemorrhage review |
+| **Acute Abdomen** | Sudden severe rigid abdominal pain with fever/vomiting | `EMERGENCY_REVIEW` / `URGENT` | Urgent surgical / abdominal evaluation |
+| **Anaphylaxis** | Swelling of lips/tongue/throat with breathing difficulty | `EMERGENCY_REVIEW` | Immediate emergency resuscitation review |
+| **Consciousness** | Syncope, loss of consciousness, unresponsiveness | `EMERGENCY_REVIEW` | Immediate vital signs & neurological triage |
+| **Self-Harm** | Active suicidal intent or self-harm statements | `EMERGENCY_REVIEW` | Immediate crisis intervention & safety escort |
+| **Obstetric** | Heavy vaginal bleeding, severe pain in pregnancy | `EMERGENCY_REVIEW` | Immediate obstetric emergency review |
+
+### Offline & Fallback Resilience
+- **Zero AI Dependency**: The triage system works completely even if all AI providers are offline or misconfigured. In offline mode, the deterministic regex engine evaluates the raw text directly and maintains 100% emergency detection sensitivity.
+- **Provider Fallback**: When AI is enabled, the triage task follows the same router chain (`Gemini` → `OpenAI` → `Groq` → `OpenRouter` → `Ollama`), guaranteeing that Ollama is only used as a final local fallback.
+
+### Available Triage Endpoints
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/consultations/{id}/triage` | Bearer JWT (Patient or Hospital) | Run full triage assessment on current consultation history & messages |
+| `GET` | `/api/v1/consultations/{id}/alerts` | Bearer JWT (Patient or Hospital) | Retrieve active triage alerts generated for this consultation |
+
+#### Access Control & Security
+- **Patient Isolation**: Patients can only inspect triage status and alerts for their own consultations. Requesting another patient's consultation returns `HTTP 404 Not Found` (never leaking consultation existence).
+- **Hospital Clinical Review**: Authorized doctors, hospital admins, and clinical staff can access triage results and alerts for consultations belonging to their assigned hospital.
+
+### Example Responses
+
+#### GET /api/v1/consultations/{id}/triage
+```json
+{
+  "consultation_id": "a1b2c3d4-...",
+  "urgency": "EMERGENCY_REVIEW",
+  "has_red_flags": true,
+  "findings": [
+    {
+      "category": "cardiovascular",
+      "severity": "CRITICAL",
+      "rule_id": "CHEST_PAIN_CRUSHING",
+      "title": "Severe/Crushing Chest Pain",
+      "description": "Patient reports severe crushing chest pain radiating to left arm",
+      "patient_quote": "crushing chest pain radiating to my left arm",
+      "requires_emergency": true
+    }
+  ],
+  "recommended_action": "Patient requires immediate in-person clinical evaluation.",
+  "safety_notice": "Some of the symptoms you reported may need urgent medical attention. Please inform the hospital triage staff immediately or proceed to the nearest emergency department.",
+  "evaluated_at": "2026-09-06T09:00:00Z"
+}
+```
+
+#### GET /api/v1/consultations/{id}/alerts
+```json
+{
+  "items": [
+    {
+      "id": "e5f6g7h8-...",
+      "consultation_id": "a1b2c3d4-...",
+      "patient_id": "4ab93c21-...",
+      "alert_type": "red_flag_cardiovascular",
+      "severity": "high",
+      "message": "Patient reports severe crushing chest pain radiating to left arm",
+      "source": "triage_engine",
+      "status": "active",
+      "created_at": "2026-09-06T09:00:00Z",
+      "updated_at": "2026-09-06T09:00:00Z",
+      "acknowledged_at": null
+    }
+  ],
+  "total": 1,
+  "consultation_id": "a1b2c3d4-..."
+}
+```
+
+### Running Triage Tests
+
+```powershell
+# Run only Step 6 triage tests
+.\.venv\Scripts\python.exe -m pytest tests/test_triage.py -v
+
+# Run the complete test suite
+.\.venv\Scripts\python.exe -m pytest -v
+```
+
 
 

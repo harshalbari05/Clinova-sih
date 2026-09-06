@@ -1,5 +1,6 @@
 """Pydantic schemas package."""
 
+from app.schemas.alert import AlertListResponse, AlertResponse
 from app.schemas.auth import (
     CurrentUserResponse,
     HospitalRegisterRequest,
@@ -13,6 +14,8 @@ from app.schemas.auth import (
 )
 
 __all__ = [
+    "AlertListResponse",
+    "AlertResponse",
     "CurrentUserResponse",
     "HospitalRegisterRequest",
     "HospitalSummaryResponse",

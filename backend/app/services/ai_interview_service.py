@@ -62,10 +62,12 @@ from app.ai.router import task_router
 from app.ai.schemas import AIMessageInput, AIProviderError, AIRequest
 from app.ai.tasks import AITaskType
 from app.models.clinical_history import ClinicalHistory
+from app.models.consultation import Consultation
 from app.models.patient import Patient
 from app.schemas.ai_message import AIMessageResponse
 from app.schemas.ai_session import AISessionResponse
 from app.services import ai_message_service, ai_session_service
+from app.triage import TriageUrgency, triage_service
 
 logger = logging.getLogger(__name__)
 
@@ -297,6 +299,25 @@ async def process_patient_message(
             await db.refresh(history)
             clinical_history_updates = updates
 
+    # 7b. Evaluate red-flag triage and synchronize alerts
+    consultation_stmt = select(Consultation).where(Consultation.id == consultation_id)
+    consultation = (await db.execute(consultation_stmt)).scalar_one_or_none()
+
+    patient_reply_message = parsed_response.next_question
+    if consultation is not None:
+        triage_result = await triage_service.evaluate_triage(
+            db=db,
+            consultation=consultation,
+            patient_text=patient_message.message,
+            history=history,
+            use_ai_assistance=False,
+        )
+        if (
+            triage_result.urgency == TriageUrgency.EMERGENCY_REVIEW
+            and triage_result.patient_safety_guidance
+        ):
+            patient_reply_message = triage_result.patient_safety_guidance
+
     # 8. Check interview completion criteria
     is_complete = is_interview_completable(
         history, parsed_response.interview_complete
@@ -312,7 +333,7 @@ async def process_patient_message(
         db=db,
         session_id=session_id,
         sender="ai",
-        message=parsed_response.next_question,
+        message=patient_reply_message,
         message_type="text",
     )
 
@@ -327,7 +348,7 @@ async def process_patient_message(
         patient_message=patient_message,
         ai_message=ai_msg,
         interview=InterviewSummary(
-            next_question=parsed_response.next_question,
+            next_question=patient_reply_message,
             current_section=parsed_response.current_section or current_state.current_section,
             interview_complete=is_complete,
             missing_information=parsed_response.missing_information,
