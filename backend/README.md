@@ -509,9 +509,9 @@ curl -X PUT "http://localhost:8000/api/v1/consultations/{consultation_id}/histor
 | Step 6 | Red-Flag Detection & Emergency Triage Engine | ✅ Complete |
 | Step 7 | Medical Document Processing (OCR + Structured Extraction) | ✅ Complete |
 | Step 8 | Structured Chronological Medical Timeline | ✅ Complete |
-| Step 9 | Clinical Summary & Physician Review Dashboard | 🔜 Next Milestone |
+| Step 9 | Clinical Summary & Physician Review Dashboard | ✅ Complete |
 
-> Steps 1 through 8 are fully implemented with strict non-diagnostic clinical safety and robust multi-tenant authorization.
+> Steps 1 through 9 are fully implemented with strict non-diagnostic clinical safety and robust multi-tenant authorization.
 
 ---
 
@@ -1041,6 +1041,31 @@ Step 8 aggregates historical clinical records across consultations, patient clin
 | `GET` | `/api/v1/patients/{id}/timeline` | Bearer JWT (Patient / Doctor) | Facility-authorized timeline retrieval by patient ID |
 
 Query Parameters supported: `event_type`, `source_type`, `start_date`, `end_date`, `order` (`asc` / `desc`).
+
+---
+
+## 19. Step 9: AI Clinical Summary & Physician Review Dashboard
+
+Step 9 establishes the physician review workflow, synthesizing pre-consultation information across all clinical streams into an objective, evidence-backed draft for attending clinicians.
+
+### Core Principles: AI Drafts. Physician Decides.
+- **Strict Non-Diagnostic Drafting**: The AI synthesizes reported facts, documented impressions, and lab results without formulating diagnoses or prescribing treatments.
+- **Full Provenance & Attribution**: Every symptom, medication, and observation is categorized under `PATIENT_REPORTED`, `DOCUMENT_EXTRACTED`, `CLINICAL_HISTORY`, or `TRIAGE_ALERT` with source quotes where available.
+- **Physician Authority**: Authorized hospital clinicians can edit the draft narrative, add clinician notes, confirm the summary, or reject/discard it with a documented clinical reason.
+- **Separation of Draft vs. Edits**: Clinician edits preserve the original AI draft in `ai_draft_text` while incrementing the version.
+- **Role Boundaries & Security**: Patients have read-only access to summaries for their own consultations and cannot modify verification states. Cross-hospital access yields a safe `404 Not Found`.
+- **Timeline Promotion**: Physician confirmation can automatically upgrade associated timeline events to `CLINICIAN_VERIFIED`.
+- **Complete Audit Trail**: Every action (`summary_generated`, `summary_edited`, `summary_confirmed`, `summary_rejected`) is recorded in the `audit_logs` table.
+
+### Endpoints
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/consultations/{id}/summary/generate` | Bearer JWT (Patient / Doctor) | Generate or regenerate an objective AI clinical draft |
+| `GET` | `/api/v1/consultations/{id}/summary` | Bearer JWT (Patient / Doctor) | Retrieve latest summary (auto-generates draft if none exists) |
+| `PUT` | `/api/v1/consultations/{id}/summary` | Bearer JWT (Doctor / Staff) | Edit summary narrative, structured data, and add clinician notes |
+| `POST` | `/api/v1/consultations/{id}/summary/confirm` | Bearer JWT (Doctor / Staff) | Confirm and finalize summary; promotes consultation to `reviewed` |
+| `POST` | `/api/v1/consultations/{id}/summary/reject` | Bearer JWT (Doctor / Staff) | Reject/discard draft summary with documented clinical rationale |
 
 
 

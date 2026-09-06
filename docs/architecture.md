@@ -88,6 +88,44 @@ Chronological Patient Medical Timeline (GET /api/v1/patients/me/timeline)
 3. **Strict Provenance**: Every event preserves `source_type` (`PATIENT_HISTORY`, `AI_INTERVIEW`, `MEDICAL_DOCUMENT`, `OCR_EXTRACTION`, `CONSULTATION`, `CLINICIAN_ENTERED`), `source_id`, source page number, and original supporting textual evidence.
 4. **Distinct Clinical Authority**: Patient-reported statements remain `UNVERIFIED` and cannot be converted to `CLINICIAN_VERIFIED` by patients. Document extractions remain `SOURCE_CONFIRMED` until reviewed by licensed physicians.
 5. **Idempotent Rebuild**: Rebuilding the timeline via `POST /api/v1/patients/me/timeline/rebuild` reconciles existing and new events deterministically without duplicate database rows.
-6. **Robust Multi-Tenant Security**: Patient can only access their own timeline. Hospital staff can access patient timelines only when an active facility consultation relationship exists. Unauthorized cross-patient access returns safe `404 Not Found`.
-7. **Step 9 Compatibility**: Structured timeline events provide direct foundation for the upcoming Step 9 Clinical Summary + Physician Review workflows.
+7. **Step 9 Bridge**: Structured timeline events provide direct foundation for the Step 9 Clinical Summary + Physician Review workflows, where clinician confirmation promotes events to `CLINICIAN_VERIFIED`.
+
+---
+
+## Step 9: AI Clinical Summary & Physician Review Dashboard
+
+```
+Existing Clinical Data Streams
+(History + AI Interview + Medical Timeline + Documents/OCR + Consultations + Triage Alerts)
+                       ↓
+         Evidence/Context Assembly (`ClinicalContextAssembler`)
+                       ↓
+         AI Summary Generator (`task_router.generate(AITaskType.CLINICAL_SUMMARY)`)
+                       ↓ (Guaranteed deterministic grounded fallback if AI is offline)
+         Pydantic Strict Validation (`StructuredSummary`)
+                       ↓
+         Draft Summary Table (`Summary`, status="draft", ai_draft_text saved)
+                       ↓
+               Physician Review
+         ┌─────────────┼─────────────┐
+         ↓             ↓             ↓
+    Edit Draft    Reject Draft  Confirm/Finalize
+         │             │             │
+         │             │             ▼
+         │             │      Finalized Summary (`status="confirmed"`)
+         │             │      + Audit Log (`summary_confirmed`)
+         │             │      + Consultation status -> `reviewed`
+         │             │      + Timeline events -> `CLINICIAN_VERIFIED`
+         │             ▼
+         │       Rejected Draft (`status="rejected"`, `rejection_reason`)
+         ▼
+    Updated Draft (`status="draft"`, version+1, `clinician_notes`)
+    + Original AI draft preserved in `ai_draft_text`
+```
+
+### Key Principles:
+1. **AI Drafts, Physician Decides**: Summary draft is an assistive synthesis tool for licensed physicians. AI never diagnoses or prescribes.
+2. **Provenance & Source Attribution**: Every observation is tagged with its source type (`PATIENT_REPORTED`, `DOCUMENT_EXTRACTED`, `CLINICAL_HISTORY`, `TRIAGE_ALERT`) with verbatim evidence snippets.
+3. **Auditability**: Complete audit trail in `audit_logs` tracking creation, edits, confirmation, and rejections.
+4. **Multi-Tenant Security**: Patients have read-only access to summaries of their own consultations. Edits, confirmations, and rejections are strictly restricted to authorized hospital clinicians (`403 Forbidden` for patients, `404 Not Found` across hospitals).
 

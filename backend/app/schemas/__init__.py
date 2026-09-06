@@ -13,6 +13,16 @@ from app.schemas.auth import (
     UserSummaryResponse,
 )
 
+from app.schemas.summary import (
+    StructuredSummary,
+    SummaryConfirmRequest,
+    SummaryEditRequest,
+    SummaryGenerateRequest,
+    SummaryRejectRequest,
+    SummaryResponse,
+    SummaryStatus,
+)
+
 __all__ = [
     "AlertListResponse",
     "AlertResponse",
@@ -23,6 +33,13 @@ __all__ = [
     "LogoutResponse",
     "PatientProfileResponse",
     "PatientRegisterRequest",
+    "StructuredSummary",
+    "SummaryConfirmRequest",
+    "SummaryEditRequest",
+    "SummaryGenerateRequest",
+    "SummaryRejectRequest",
+    "SummaryResponse",
+    "SummaryStatus",
     "TokenResponse",
     "UserSummaryResponse",
 ]
