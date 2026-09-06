@@ -1,38 +1,55 @@
-"""AI interview service — placeholder abstraction for future LLM integration.
+"""AI interview service — routes clinical history-taking through the AI layer.
 
-This module defines the architectural boundary between the AI session
+This module is the architectural boundary between the AI session
 infrastructure and the AI interview logic (LLM-powered question generation,
 answer parsing, clinical history extraction).
 
-Current state (Step 4):
-    No real LLM is connected. All functions are stubs that document
-    the intended interface and return placeholder responses.
+Current state (Step 5A):
+    The provider architecture is wired in. When AI_ENABLED=True and a
+    provider is configured, real LLM calls are made via the AI task router.
+    If AI is not enabled or the provider is not available, the service
+    falls back to placeholder responses so the session infrastructure
+    continues to work without breaking.
 
-Future state (Step 5+):
-    These functions will integrate with an LLM provider
-    (e.g., Gemini, OpenAI, Groq) to generate contextual questions
-    and extract structured clinical history from patient answers.
+Future state (Step 5B+):
+    generate_next_question() will pass full conversation history and
+    a clinical interviewer system prompt to the LLM. Structured extraction
+    and clinical summary generation will be added as separate task calls.
 
 Architecture:
     Patient Message
           ↓
     process_patient_message()
           ↓
-    generate_next_question()  →  [Future: LLM Provider]
+    generate_next_question()
+          ↓
+    task_router.generate(HISTORY_INTERVIEW, AIRequest)   ← [Step 5A]
+          ↓
+    AIProvider.generate() → AIResponse
           ↓
     AI Message (sender="ai") stored in DB
           ↓
-    [Eventually] extract_to_clinical_history()
+    [Eventually Step 5B+] extract_to_clinical_history()
+
+Provider independence:
+    This service imports ONLY from app.ai (the abstraction layer).
+    It MUST NOT import any provider SDK (google.genai, openai, httpx, etc.).
 """
 
+import logging
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.router import task_router
+from app.ai.schemas import AIMessageInput, AIProviderError, AIRequest
+from app.ai.tasks import AITaskType
 from app.models.patient import Patient
 from app.schemas.ai_message import AIMessageResponse
 from app.schemas.ai_session import AISessionResponse
 from app.services import ai_message_service, ai_session_service
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "start_interview",
@@ -42,7 +59,7 @@ __all__ = [
 ]
 
 # ---------------------------------------------------------------------------
-# Placeholder interview questions — will be replaced by LLM in a future step
+# Placeholder responses — used when AI provider is unavailable
 # ---------------------------------------------------------------------------
 
 _OPENING_QUESTION = (
@@ -54,9 +71,21 @@ _FALLBACK_QUESTION = (
     "Could you tell me more about when this started and what makes it better or worse?"
 )
 
+# ---------------------------------------------------------------------------
+# System prompt for the clinical interviewer (Step 5A — placeholder)
+# Future steps will expand this into a full clinical interviewer prompt.
+# ---------------------------------------------------------------------------
+
+_CLINICAL_INTERVIEWER_SYSTEM_PROMPT = (
+    "You are a compassionate and professional clinical history-taking assistant "
+    "at an Indian hospital. Your role is to ask clear, empathetic follow-up "
+    "questions to help gather the patient's clinical history. "
+    "Ask ONE focused question at a time. Be concise and professional."
+)
+
 
 # ---------------------------------------------------------------------------
-# Public interface (stubs ready for LLM integration)
+# Public interface
 # ---------------------------------------------------------------------------
 
 
@@ -66,12 +95,10 @@ async def start_interview(
 ) -> AIMessageResponse:
     """Begin the AI interview by sending the opening question.
 
-    In a future step, this will:
-    - Load the patient's existing clinical history context.
+    Currently uses a fixed opening question. Future steps will:
+    - Load patient's existing clinical history context.
     - Determine which sections are missing.
     - Generate a contextually appropriate opening question via LLM.
-
-    Currently: stores a fixed opening message with sender="ai".
 
     Args:
         db: Active async database session.
@@ -97,14 +124,9 @@ async def process_patient_message(
 ) -> AIMessageResponse:
     """Process a patient's message and generate the next AI response.
 
-    In a future step, this will:
-    - Pass the full conversation history and patient message to an LLM.
-    - Parse the LLM's response.
-    - Detect if a clinical history section has been answered.
-    - Call extract_to_clinical_history() if a complete answer is found.
-    - Return the LLM's next question/acknowledgement.
-
-    Currently: stores a fixed follow-up question with sender="ai".
+    Calls generate_next_question() which routes through the AI task router.
+    If the provider is unavailable or not configured, falls back to a
+    placeholder response so the session infrastructure is never broken.
 
     Args:
         db: Active async database session.
@@ -115,7 +137,6 @@ async def process_patient_message(
     Returns:
         AIMessageResponse for the stored AI follow-up message.
     """
-    # Placeholder — generate_next_question will become an LLM call
     next_question = await generate_next_question(
         patient_message=patient_message.message,
     )
@@ -131,15 +152,11 @@ async def process_patient_message(
 async def generate_next_question(
     patient_message: str,
 ) -> str:
-    """Generate the next interview question based on the patient's response.
+    """Generate the next interview question via the AI task router.
 
-    In a future step, this will call an LLM with:
-    - System prompt (clinical interviewer persona, Indian medical context)
-    - Conversation history
-    - Patient's latest answer
-    - Remaining clinical history sections to collect
-
-    Currently: returns a fixed follow-up question.
+    Routes through AITaskType.HISTORY_INTERVIEW → configured provider.
+    If the provider is unavailable or not configured, returns the
+    placeholder follow-up question so the session never breaks.
 
     Args:
         patient_message: The patient's latest answer text.
@@ -147,14 +164,38 @@ async def generate_next_question(
     Returns:
         The next question string to be stored as an AI message.
     """
-    # TODO (Step 5+): Replace with LLM API call
-    # Example future implementation:
-    #   response = await llm_client.generate(
-    #       system_prompt=CLINICAL_INTERVIEWER_PROMPT,
-    #       history=conversation_history,
-    #       user_message=patient_message,
-    #   )
-    #   return response.text
+    request = AIRequest(
+        messages=[
+            AIMessageInput(role="user", content=patient_message),
+        ],
+        system_prompt=_CLINICAL_INTERVIEWER_SYSTEM_PROMPT,
+        max_tokens=256,
+        temperature=0.7,
+    )
+
+    try:
+        response = await task_router.generate(
+            task=AITaskType.HISTORY_INTERVIEW,
+            request=request,
+        )
+        text = (response.text or "").strip()
+        if text:
+            return text
+        # Provider returned empty response — fall through to placeholder
+        logger.warning(
+            "AI provider '%s' returned empty response; using placeholder.",
+            response.provider,
+        )
+    except AIProviderError as exc:
+        # Provider not configured or unavailable — this is expected in
+        # environments without AI credentials. Never crash the interview.
+        logger.warning(
+            "AI provider error (task=HISTORY_INTERVIEW, kind=%s): %s. "
+            "Falling back to placeholder response.",
+            exc.kind.value,
+            exc.message,
+        )
+
     return _FALLBACK_QUESTION
 
 
@@ -165,7 +206,7 @@ async def complete_interview(
 ) -> AISessionResponse:
     """Complete the AI interview session.
 
-    In a future step, this will also:
+    Future steps will also:
     - Extract all clinical history fields from the conversation.
     - Update the ClinicalHistory record with structured data.
     - Generate a preliminary clinical summary.

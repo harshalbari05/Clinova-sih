@@ -546,4 +546,212 @@ Patient → Consultation → AI Session → AI Messages → Structured Clinical 
 ```
 Attempting to add messages to or complete a session already in a terminal state returns `HTTP 409 Conflict`.
 
+---
+
+## Step 5A — AI Provider Architecture
+
+Clinova uses a **provider-independent AI abstraction layer**. No single AI model is hard-coded. Different clinical tasks can route to different providers, and switching providers requires only a configuration change — no code changes.
+
+### Architecture Overview
+
+```
+         Clinical Services (ai_interview_service, etc.)
+                          ↓
+                    AITaskRouter           (app/ai/router.py)
+                          ↓
+               AIProvider Interface        (app/ai/providers/base.py)
+                          ↓
+       ┌──────────────────┼──────────────────┐
+       ↓                  ↓                  ↓
+ GeminiProvider    OpenAIProvider     OllamaProvider
+  (gemini.py)       (openai.py)       (ollama.py)
+```
+
+**Key design principles:**
+- Provider SDK imports (`google.genai`, `openai`) are **confined inside adapter modules** — they never leak into API endpoints, schemas, models, or services.
+- Providers are **lazily initialised** — no network calls at startup.
+- Missing API keys do **not** crash the application at startup.
+- The application communicates only with `AIProvider` — never with provider-specific SDK objects.
+
+### Package Structure
+
+```
+backend/app/ai/
+├── __init__.py          # Public exports
+├── config.py            # AIConfig — pydantic-settings for all provider vars
+├── schemas.py           # AIRequest, AIResponse, AIProviderError, AIErrorKind
+├── tasks.py             # AITaskType enum
+├── registry.py          # get_provider() factory with instance caching
+├── router.py            # AITaskRouter — task→provider with fallback
+└── providers/
+    ├── __init__.py
+    ├── base.py          # AIProvider abstract base class
+    ├── gemini.py        # Google Gemini adapter
+    ├── openai.py        # OpenAI adapter (also: Groq, OpenRouter, Cerebras)
+    └── ollama.py        # Ollama local adapter (httpx, no extra SDK)
+```
+
+### AI Task Types
+
+| Task | Enum Value | Description |
+|------|-----------|-------------|
+| Clinical History Interview | `HISTORY_INTERVIEW` | Conversational AI intake |
+| Structured Extraction | `STRUCTURED_EXTRACTION` | Extract clinical data as JSON |
+| Clinical Summary | `CLINICAL_SUMMARY` | Generate readable summaries |
+| Document Analysis | `DOCUMENT_ANALYSIS` | Analyse medical documents |
+| Translation | `TRANSLATION` | Translate clinical content |
+| Triage | `TRIAGE` | Preliminary severity assessment |
+
+> **Note:** Task types are routing definitions only. Clinical AI capabilities are implemented in future steps.
+
+### Environment Variables (Step 5A)
+
+Add these to your `.env` file:
+
+```env
+# Provider selection
+AI_DEFAULT_PROVIDER=ollama          # gemini | openai | ollama | groq | openrouter
+
+# Per-task overrides (optional — comment out to use AI_DEFAULT_PROVIDER)
+# AI_HISTORY_INTERVIEW_PROVIDER=gemini
+# AI_STRUCTURED_EXTRACTION_PROVIDER=openai
+# AI_CLINICAL_SUMMARY_PROVIDER=gemini
+
+# Fallback chain (comma-separated, tried in order after primary fails)
+# AI_FALLBACK_PROVIDERS=ollama,openai
+
+# Google Gemini
+# GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.0-flash
+
+# OpenAI
+# OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-4o-mini
+
+# Groq (OpenAI-compatible)
+# GROQ_API_KEY=your_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# OpenRouter
+# OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=openai/gpt-4o-mini
+
+# Ollama (local, no API key)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+```
+
+### Provider Configuration Details
+
+#### Ollama (Local — Recommended for Development)
+
+Ollama runs locally with no API key and no cost:
+
+```bash
+# Install: https://ollama.ai
+ollama pull llama3.2     # download model (~2GB)
+ollama serve             # start server (default: localhost:11434)
+```
+
+Set in `.env`:
+```env
+AI_DEFAULT_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+```
+
+Ollama is **not contacted at startup** — only when a request is made.
+
+#### Google Gemini
+
+```env
+AI_DEFAULT_PROVIDER=gemini
+GEMINI_API_KEY=your_api_key_from_aistudio
+GEMINI_MODEL=gemini-2.0-flash
+```
+
+Get your key: [Google AI Studio](https://aistudio.google.com/app/apikey)
+
+#### OpenAI
+
+```env
+AI_DEFAULT_PROVIDER=openai
+OPENAI_API_KEY=your_key_from_platform_openai
+OPENAI_MODEL=gpt-4o-mini
+```
+
+#### Groq (Fast, Free Tier Available)
+
+```env
+AI_DEFAULT_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+Groq uses the `OpenAIProvider` adapter internally with Groq's base URL.
+
+#### OpenRouter (Access Many Models via One API)
+
+```env
+AI_DEFAULT_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_openrouter_key
+OPENROUTER_MODEL=openai/gpt-4o-mini
+```
+
+### Task Routing
+
+Configure which provider handles each task:
+
+```env
+# Route different tasks to different providers
+AI_HISTORY_INTERVIEW_PROVIDER=gemini        # conversational
+AI_STRUCTURED_EXTRACTION_PROVIDER=openai   # reliable JSON
+AI_TRIAGE_PROVIDER=gemini                  # most capable
+AI_TRANSLATION_PROVIDER=ollama             # local/private
+```
+
+### Fallback Mechanism
+
+The `AITaskRouter` implements a bounded fallback chain:
+
+```
+Primary Provider  ──(fail: retryable)──→  Fallback 1  ──(fail)──→  Fallback 2
+                                                                         ↓
+                                                              AIProviderError (surfaced)
+```
+
+**Error categories:**
+
+| Kind | Retryable | Description |
+|------|-----------|-------------|
+| `AUTH_ERROR` | ❌ No | Missing/invalid API key — operator action required |
+| `INVALID_REQUEST` | ❌ No | Bad request — fix the request |
+| `PROVIDER_UNAVAILABLE` | ✅ Yes | Endpoint down/unreachable |
+| `RATE_LIMIT` | ✅ Yes | Quota exhausted — try another provider |
+| `TIMEOUT` | ✅ Yes | Request timed out |
+| `MALFORMED_RESPONSE` | ✅ Yes | Provider returned unexpected format |
+| `UNEXPECTED_ERROR` | ✅ Yes | Catch-all |
+
+Configure fallbacks:
+```env
+AI_FALLBACK_PROVIDERS=ollama,openai
+```
+
+Maximum 3 total attempts (bounded — never infinite retry).
+
+### Adding a New Provider
+
+1. Create `backend/app/ai/providers/yourprovider.py` — subclass `AIProvider`, implement `generate()`.
+2. Register it in `backend/app/ai/registry.py` — add to `_KNOWN_PROVIDERS` and `_create_provider()`.
+3. Add config fields to `backend/app/ai/config.py` (API key, model, base URL).
+4. Document in `.env.example`.
+
+No other files need to change. The application immediately supports `AI_DEFAULT_PROVIDER=yourprovider`.
+
+### Security Notes
+
+- API keys are **never logged**, **never returned** in API responses, **never placed in JWT tokens**.
+- Provider SDK objects never reach API endpoints or clinical schemas.
+- Ollama/provider endpoints are never exposed to the frontend — all AI calls go through the Clinova backend.
+- Clinical conversation content is not logged at the provider level.
 

@@ -22,3 +22,10 @@ pytest>=8.3.0
 pytest-asyncio>=0.24.0
 aiosqlite>=0.20.0
 
+# AI Provider SDKs (Step 5A)
+# google-genai: Official Gemini SDK (required only when Gemini is the active provider)
+google-genai>=1.0.0
+
+# openai: Official OpenAI SDK (also compatible with Groq, OpenRouter, Cerebras)
+# Required only when OpenAI/Groq/OpenRouter is the active provider
+openai>=1.0.0
