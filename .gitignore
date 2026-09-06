@@ -80,3 +80,7 @@ Thumbs.db
 *.sublime-workspace
 *.sublime-project
 .gemini/
+
+# Medical Document Storage (Step 7)
+storage/
+backend/storage/

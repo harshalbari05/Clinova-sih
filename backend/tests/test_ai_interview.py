@@ -1051,4 +1051,5 @@ async def test_34_regression_full_clinical_interview_turn(
         hist = (await db_session.execute(stmt)).scalar_one_or_none()
         assert hist is not None
         assert hist.chief_complaint == "Severe abdominal pain"
+        assert hist.history_of_present_illness is not None
         assert "2 days ago" in hist.history_of_present_illness

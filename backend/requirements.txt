@@ -29,3 +29,9 @@ google-genai>=1.0.0
 # openai: Official OpenAI SDK (also compatible with Groq, OpenRouter, Cerebras)
 # Required only when OpenAI/Groq/OpenRouter is the active provider
 openai>=1.0.0
+
+# Medical Document Processing, OCR & Storage (Step 7)
+python-multipart>=0.0.18
+pypdf>=5.0.0
+pillow>=10.0.0
+pytesseract>=0.3.10

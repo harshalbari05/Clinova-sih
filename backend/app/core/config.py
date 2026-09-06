@@ -69,6 +69,14 @@ class Settings(BaseSettings):
         """Resolve active JWT algorithm with fallback to legacy ALGORITHM."""
         return self.JWT_ALGORITHM or self.ALGORITHM
 
+    # Medical Document Storage & OCR Configuration (Step 7)
+    MEDICAL_DOCUMENT_MAX_SIZE_MB: int = 10
+    MEDICAL_DOCUMENT_STORAGE_PATH: str = "./storage/medical_documents"
+    DOCUMENT_PROCESSING_ENABLED: bool = True
+    OCR_PROVIDER: str = "tesseract"
+    OCR_DEFAULT_LANGUAGE: str = "eng"
+    OCR_LANGUAGES: str = "eng,hin,mar"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     clinical_history,
     consultations,
     health,
+    medical_documents,
     patients,
     triage,
 )
@@ -44,3 +45,10 @@ api_router.include_router(
 #   GET  /ai-sessions/{session_id}/messages
 #   POST /ai-sessions/{session_id}/complete
 api_router.include_router(ai_sessions.router, tags=["AI Sessions"])
+
+# Medical document endpoints
+api_router.include_router(
+    medical_documents.router,
+    prefix="/medical-documents",
+    tags=["Medical Documents"],
+)
