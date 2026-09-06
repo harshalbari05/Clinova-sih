@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.medication import Medication
     from app.models.patient import Patient
     from app.models.summary import Summary
+    from app.models.timeline_event import TimelineEvent
 
 
 class Consultation(Base, TimestampMixin):
@@ -100,5 +101,9 @@ class Consultation(Base, TimestampMixin):
     )
     consents: Mapped[list["Consent"]] = relationship(
         "Consent",
+        back_populates="consultation",
+    )
+    timeline_events: Mapped[list["TimelineEvent"]] = relationship(
+        "TimelineEvent",
         back_populates="consultation",
     )

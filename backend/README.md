@@ -507,11 +507,11 @@ curl -X PUT "http://localhost:8000/api/v1/consultations/{consultation_id}/histor
 | Step 5A | Multi-Provider AI Architecture (Gemini/OpenAI/Groq/Ollama) | ✅ Complete |
 | Step 5B | Real Adaptive AI Clinical History Interview Engine | ✅ Complete |
 | Step 6 | Red-Flag Detection & Emergency Triage Engine | ✅ Complete |
-| Step 7 | Physician Summary Generation | 🔜 Not started |
-| Step 8 | Document Upload (OCR) | 🔜 Not started |
-| Step 9 | Hospital Review Dashboard | 🔜 Not started |
+| Step 7 | Medical Document Processing (OCR + Structured Extraction) | ✅ Complete |
+| Step 8 | Structured Chronological Medical Timeline | ✅ Complete |
+| Step 9 | Clinical Summary & Physician Review Dashboard | 🔜 Next Milestone |
 
-> Production LLM integration, triage alerts, and clinical interview engines are active. OCR document processing, physician summaries, and ABDM integration are next stages.
+> Steps 1 through 8 are fully implemented with strict non-diagnostic clinical safety and robust multi-tenant authorization.
 
 ---
 
@@ -1017,6 +1017,31 @@ Patient Message / Clinical Intake
 # Run the complete test suite
 .\.venv\Scripts\python.exe -m pytest -v
 ```
+
+---
+
+## 18. Step 8: Structured Chronological Medical Timeline
+
+Step 8 aggregates historical clinical records across consultations, patient clinical history, AI clinical interview turns, and OCR/structured document extractions into an evidence-backed, chronological patient timeline.
+
+### Core Principles
+- **Strictly Source-Backed**: The timeline organizes historical events but never diagnoses, deduces, or prescribes.
+- **No Invented Dates**: Dates preserve exact precision (`EXACT`, `MONTH`, `YEAR`, `APPROXIMATE`, `UNKNOWN`). Fuzzy statements (e.g. "about 5 years ago") remain approximate with no fabricated calendar dates.
+- **Full Traceability**: Every event retains its `source_type` (`PATIENT_HISTORY`, `AI_INTERVIEW`, `MEDICAL_DOCUMENT`, `OCR_EXTRACTION`, `CONSULTATION`, `CLINICIAN_ENTERED`), `source_id`, source page number, and original text snippet evidence.
+- **Unverified vs. Source-Confirmed**: Patient-reported statements remain `UNVERIFIED`. Document-extracted entries remain `SOURCE_CONFIRMED` until reviewed by a physician in Step 9.
+- **Idempotency**: Running timeline rebuild multiple times reconciles existing events without creating duplicate rows.
+
+### Endpoints
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/patients/me/timeline` | Bearer JWT (Patient) | Retrieve authenticated patient's chronological timeline |
+| `POST` | `/api/v1/patients/me/timeline/rebuild` | Bearer JWT (Patient) | Re-extract and synchronize all timeline events idempotently |
+| `GET` | `/api/v1/consultations/{id}/timeline` | Bearer JWT (Patient / Doctor) | Consultation-scoped timeline retrieval with facility authorization |
+| `GET` | `/api/v1/patients/{id}/timeline` | Bearer JWT (Patient / Doctor) | Facility-authorized timeline retrieval by patient ID |
+
+Query Parameters supported: `event_type`, `source_type`, `start_date`, `end_date`, `order` (`asc` / `desc`).
+
 
 
 

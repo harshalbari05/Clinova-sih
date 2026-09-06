@@ -1,13 +1,15 @@
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import JSONB_TYPE, UUID_TYPE, Base, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.consultation import Consultation
+    from app.models.user import User
 
 
 class Summary(Base, TimestampMixin):
@@ -50,8 +52,35 @@ class Summary(Base, TimestampMixin):
         nullable=False,
     )  # draft, confirmed, rejected
 
+    # Step 9: Physician Review and Auditability Fields
+    reviewed_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID_TYPE,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    clinician_notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    rejection_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    ai_draft_text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     # Relationships
     consultation: Mapped["Consultation"] = relationship(
         "Consultation",
         back_populates="summaries",
+    )
+    reviewed_by: Mapped["User | None"] = relationship(
+        "User",
     )

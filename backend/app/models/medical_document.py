@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.models.consultation import Consultation
     from app.models.extracted_data import ExtractedData
     from app.models.patient import Patient
+    from app.models.timeline_event import TimelineEvent
 
 
 class MedicalDocument(Base, TimestampMixin):
@@ -80,4 +81,8 @@ class MedicalDocument(Base, TimestampMixin):
         back_populates="document",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    timeline_events: Mapped[list["TimelineEvent"]] = relationship(
+        "TimelineEvent",
+        back_populates="medical_document",
     )

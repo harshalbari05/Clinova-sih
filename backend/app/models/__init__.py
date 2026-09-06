@@ -16,6 +16,7 @@ from app.models.medical_document import MedicalDocument
 from app.models.medication import Medication
 from app.models.patient import Patient
 from app.models.summary import Summary
+from app.models.timeline_event import TimelineEvent
 from app.models.user import User
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "Medication",
     "Patient",
     "Summary",
+    "TimelineEvent",
     "TimestampMixin",
     "User",
 ]

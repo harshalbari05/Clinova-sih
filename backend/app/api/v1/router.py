@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     health,
     medical_documents,
     patients,
+    timeline,
     triage,
 )
 
@@ -51,4 +52,10 @@ api_router.include_router(
     medical_documents.router,
     prefix="/medical-documents",
     tags=["Medical Documents"],
+)
+
+# Medical timeline endpoints (self-prefixed /patients/me/timeline, /consultations/..., etc.)
+api_router.include_router(
+    timeline.router,
+    tags=["Medical Timeline"],
 )
