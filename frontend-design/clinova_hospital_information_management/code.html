@@ -1,0 +1,644 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#6d7a77", "tertiary-fixed": "#cce5ff", "secondary-fixed-dim": "#80d5cb", "secondary-container": "#99efe5", "on-tertiary-fixed": "#001d31", "on-secondary": "#ffffff", "secondary": "#006a63", "inverse-surface": "#283044", "on-secondary-fixed-variant": "#00504a", "surface-dim": "#d2d9f4", "on-primary": "#ffffff", "on-error-container": "#93000a", "on-tertiary-container": "#fdfcff", "surface": "#faf8ff", "surface-container-low": "#f2f3ff", "surface-container-highest": "#dae2fd", "on-tertiary-fixed-variant": "#004b73", "on-surface-variant": "#3d4947", "on-secondary-fixed": "#00201d", "on-secondary-container": "#006f67", "error": "#ba1a1a", "primary-fixed": "#89f5e7", "on-primary-container": "#f4fffc", "secondary-fixed": "#9cf2e8", "surface-container-lowest": "#ffffff", "surface-variant": "#dae2fd", "tertiary": "#006194", "surface-container": "#eaedff", "inverse-primary": "#6bd8cb", "surface-tint": "#006a61", "on-tertiary": "#ffffff", "on-surface": "#131b2e", "on-primary-fixed": "#00201d", "outline-variant": "#bcc9c6", "primary-fixed-dim": "#6bd8cb", "surface-container-high": "#e2e7ff", "primary-container": "#008378", "surface-bright": "#faf8ff", "on-error": "#ffffff", "error-container": "#ffdad6", "inverse-on-surface": "#eef0ff", "background": "#faf8ff", "on-background": "#131b2e", "primary": "#00685f", "tertiary-fixed-dim": "#93ccff", "tertiary-container": "#007bb9", "on-primary-fixed-variant": "#005049" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "pad-md": "0.75rem", "pad-lg": "1rem", "pad-xl": "1.5rem", "touch-min": "3rem", "gap-grid": "1.5rem", "gutter-mobile": "1rem", "gutter-desktop": "2rem", "pad-xs": "0.25rem", "pad-2xl": "2rem", "pad-sm": "0.5rem" }, "fontFamily": { "display-lg-mobile": [ "Manrope" ], "headline-sm": [ "Manrope" ], "headline-lg": [ "Manrope" ], "body-lg": [ "Manrope" ], "body-xl": [ "Manrope" ], "headline-md": [ "Manrope" ], "display-lg": [ "Manrope" ], "label-lg": [ "Manrope" ], "label-md": [ "Manrope" ], "body-md": [ "Manrope" ], "caption": [ "Manrope" ], "body-bold": [ "Manrope" ] }, "fontSize": { "display-lg-mobile": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" } ], "headline-sm": [ "20px", { "lineHeight": "28px", "fontWeight": "600" } ], "headline-lg": [ "30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700" } ], "body-lg": [ "16px", { "lineHeight": "24px", "fontWeight": "400" } ], "body-xl": [ "18px", { "lineHeight": "28px", "fontWeight": "400" } ], "headline-md": [ "24px", { "lineHeight": "32px", "fontWeight": "600" } ], "display-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "label-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" } ], "label-md": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" } ], "body-md": [ "15px", { "lineHeight": "22px", "fontWeight": "400" } ], "caption": [ "12px", { "lineHeight": "16px", "fontWeight": "500" } ], "body-bold": [ "16px", { "lineHeight": "24px", "fontWeight": "600" } ] } } } };</script></head><body class="bg-background font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="flex items-center gap-3 px-pad-xl py-pad-xl"><div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[24px]">local_hospital</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">CLINOVA</span></div></div><div class="px-pad-lg mb-pad-sm"><span class="font-caption text-caption text-on-surface-variant uppercase tracking-wider px-pad-sm font-semibold">Clinical Modules</span></div><nav class="flex flex-col gap-1 px-pad-md" data-active-classes="bg-primary text-on-primary shadow-sm font-label-lg text-label-lg"><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="">Dashboard</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="patients" href="#"><span class="material-symbols-outlined text-[20px]">personal_injury</span><span class="">Patients</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="opd-queue" href="#"><span class="material-symbols-outlined text-[20px]">hourglass_top</span><span class="">OPD Queue</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="departments" href="#"><span class="material-symbols-outlined text-[20px]">apartment</span><span class="">Departments</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="doctors" href="#"><span class="material-symbols-outlined text-[20px]">stethoscope</span><span class="">Doctors</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="medical-documents" href="#"><span class="material-symbols-outlined text-[20px]">description</span><span class="">Medical Documents</span></a><a aria-current="page" class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl transition-colors min-h-[44px] bg-primary text-on-primary shadow-sm font-label-lg text-label-lg" data-path="hospital-information" href="#"><span class="material-symbols-outlined text-[20px]">domain</span><span class="">Hospital Information</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="abdm-his" href="#"><span class="material-symbols-outlined text-[20px]">hub</span><span class="">ABDM / HIS</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="consent-privacy" href="#"><span class="material-symbols-outlined text-[20px]">security</span><span class="">Consent &amp; Privacy</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">insights</span><span class="">Analytics</span></a><a class="flex items-center gap-3 px-pad-md py-pad-sm rounded-xl text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container hover:text-on-surface transition-colors min-h-[44px]" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="">Settings</span></a></nav></div><div class="p-pad-md mt-pad-md"><div class="bg-surface-container-low rounded-xl p-pad-md flex flex-col gap-2"><div class="flex items-center justify-between"><span class="font-caption text-caption text-on-surface-variant">Operational v2.4</span><span class="inline-flex items-center px-2 py-0.5 rounded-full font-caption text-caption bg-secondary-container text-on-secondary-container font-semibold">NABH</span></div><a class="flex items-center gap-2 pt-pad-xs font-label-md text-label-md text-primary hover:text-on-surface transition-colors" data-path="support-help" href="#"><span class="material-symbols-outlined text-[18px]">help_clinic</span><span class="">Hospital Support &amp; Help</span></a></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-pad-lg"><div class="flex items-center gap-2"><span class="font-body-bold text-body-bold text-on-surface tracking-tight">City Hospital</span><span class="font-caption text-caption px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-semibold tracking-wide">CENTRAL COMPLEX</span></div><div class="hidden md:flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">calendar_today</span><span class="">Thursday, 24 Oct 2024</span></div></div><div class="flex items-center gap-pad-md"><div class="relative flex items-center justify-center"><button aria-label="Notifications" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors focus:outline-none" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span></button><span class="absolute top-1.5 right-1.5 w-4 h-4 bg-error text-on-error rounded-full font-caption text-[10px] leading-4 text-center font-bold">3</span></div><div class="h-6 w-[1px] bg-outline-variant/40"></div><div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">verified_user</span><span class="font-label-md text-label-md font-semibold text-primary">Admin Clearance</span></div><div class="flex items-center gap-3 pl-pad-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1XawkG5JrCmPyTRYobfRwsa6AReOu3pCR87bKz9tOejBJAGJe4IaIeguTXIPgYIK7vJ7Oyv9DXoZ5Y-WcpKjFJ3r21puXdb_LdXJ8UJIfhEW20fYedABkSi3HIyNdiDz8Ie53IribvxaGEZ0QEQoDIYZokKhcH3Lt9-GIvZdO0EfKVs_cTk_hOngxseTeVVWigNIDHT1vUnsUfvWJAAKkLwjFa200LRHKphUfyX0YZhqV4Gay4WUKcNN7UT7_h_x1vSEAifZUpeZQ"><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface font-semibold leading-tight">Dr. Sarah Jenkins</span><span class="font-caption text-caption text-on-surface-variant leading-none">Chief Medical Supdt</span></div></div><a class="flex items-center gap-1 px-3 py-2 rounded-lg font-label-md text-label-md text-error hover:bg-error-container hover:text-on-error-container transition-colors min-h-[40px] ml-pad-xs" data-path="login" href="#"><span class="material-symbols-outlined text-[18px]">logout</span><span class="hidden sm:inline font-semibold">Logout</span></a></div></header><main class="w-full pt-16 bg-background min-h-screen px-gutter-desktop py-pad-xl"><div class="flex flex-col w-full pb-32">
+<!-- Top Feedback / Notification Toast Area -->
+<div class="hidden mb-pad-lg flex items-center justify-between p-pad-lg rounded-xl bg-secondary-container text-on-secondary-container shadow-sm transition-all duration-300" id="saveSuccessBanner">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div>
+<p class="font-body-bold text-body-bold">Hospital information updated successfully</p>
+<p class="font-label-md text-label-md opacity-90">Changes are now synced across reception terminals, OPD kiosks, and patient mobile portal.</p>
+</div>
+</div>
+<button class="p-2 rounded-lg hover:bg-secondary/10 text-on-secondary-container transition-colors" onclick="dismissNotification()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Header Section with State Indicator and Primary Action -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-pad-lg pb-pad-xl">
+<div>
+<div class="flex items-center gap-3 mb-1">
+<h1 class="font-display-lg text-display-lg text-on-surface tracking-tight">Hospital Information</h1>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-label-md bg-surface-container-high text-on-surface-variant font-semibold" id="modeBadge">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+          Viewing Mode
+        </span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Manage your hospital details, registry coordinates, emergency operations, and clinical amenities.</p>
+</div>
+<div class="flex flex-wrap items-center gap-pad-md">
+<!-- Accreditation Pill -->
+<div class="flex items-center gap-2.5 px-pad-md py-pad-sm rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="w-7 h-7 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant leading-none font-semibold">NABH ACCREDITED</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Active • ID #NABH-2024-8841</span>
+</div>
+</div>
+<!-- Toggle Edit/View Button -->
+<button class="min-h-[48px] px-pad-xl rounded-xl bg-primary text-on-primary font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-primary-container active:scale-[0.99] transition-all" id="toggleEditBtn" onclick="toggleEditMode()" type="button">
+<span class="material-symbols-outlined text-[20px]" id="editBtnIcon">edit_square</span>
+<span id="editBtnText" class="">Edit Information</span>
+</button>
+</div>
+</div>
+<!-- Visual Hospital Anchor Card -->
+<div class="mb-pad-xl grid grid-cols-1 lg:grid-cols-12 gap-pad-lg">
+<div class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex flex-col md:flex-row gap-pad-xl items-start md:items-center justify-between">
+<div class="flex items-start gap-pad-lg">
+<div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="High quality architectural exterior photograph of modern multi-story city hospital facade with glass atrium, green ambulance bay, clear daylight, clean medical signage, teal and neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5ODWGT77stSVru4wxh4605pX9bYk2k-dfRS3imCQ6JNNPxWIKsA3Yt7nQj-lOKfXmVqfVVPV03vg0qBXIoRuMDy6fTVv7kQgmizHFh7BwB4v3chsDtBicEbsTS7vp4ImBSrAg561DBYV1Yy7RyUSLZzez2uvL9IESZ3r1kErntMx9TjdEYwDwR8DXAr5IcqmnYRUnY8x2aJbm5cusdOcJ_LAnvG8NJmUUsMeP_bRqekdnHj6U-QSdBQ">
+<button class="hidden absolute bottom-1 right-1 w-7 h-7 bg-surface-container-lowest text-on-surface rounded-md shadow flex items-center justify-center hover:bg-surface-container" id="photoUploadTrigger" title="Update facility photo" type="button">
+<span class="material-symbols-outlined text-[16px]">photo_camera</span>
+</button>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-semibold">FACILITY ID • HOSP-IN-MUM-019</span>
+<span class="inline-flex items-center gap-1 font-caption text-caption text-secondary font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+              Verified Health Institute
+            </span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface">City Hospital &amp; Medical Research Centre</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Plot 14, Central Healthcare Corridor, MG Road, Mumbai, Maharashtra 400001</p>
+</div>
+</div>
+<div class="flex md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2 shrink-0 pt-2 md:pt-0">
+<span class="font-caption text-caption text-on-surface-variant uppercase tracking-wider font-semibold">ABDM Registry Sync</span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container font-label-md text-label-md text-on-secondary-container font-semibold">
+<span class="material-symbols-outlined text-[16px]">sync_saved_locally</span>
+          Connected
+        </span>
+</div>
+</div>
+<!-- Quick Stats Bento -->
+<div class="lg:col-span-4 grid grid-cols-2 gap-pad-md">
+<div class="bg-surface-container-lowest rounded-xl p-pad-lg shadow-sm flex flex-col justify-between">
+<span class="font-caption text-caption text-on-surface-variant uppercase tracking-wider font-semibold">Emergency Trauma</span>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-display-lg text-display-lg text-primary">Level 1</span>
+</div>
+<span class="font-caption text-caption text-secondary font-semibold mt-1">24/7 Red Code Active</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-pad-lg shadow-sm flex flex-col justify-between">
+<span class="font-caption text-caption text-on-surface-variant uppercase tracking-wider font-semibold">Registered Beds</span>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-display-lg text-display-lg text-on-surface">450</span>
+<span class="font-caption text-caption text-on-surface-variant font-semibold">Beds</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">84 Critical Care / ICU</span>
+</div>
+</div>
+</div>
+<form class="flex flex-col gap-pad-xl" id="hospitalInfoForm" onsubmit="handleFormSubmit(event)">
+<!-- 1. HOSPITAL DETAILS SECTION -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex flex-col gap-pad-lg">
+<div class="flex flex-col gap-1 pb-pad-sm">
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">domain</span>
+</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Hospital Details</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Official registration identity, clinical category, and certified contact channels for government and health network records.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-pad-lg gap-y-pad-lg">
+<!-- Hospital Legal Name -->
+<div class="lg:col-span-8 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="hospitalName">
+            Hospital Legal Name <span class="text-error font-bold">*</span>
+</label>
+<div class="relative">
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="hospitalName" name="hospitalName" required="" type="text" value="City Hospital &amp; Medical Research Centre">
+</div>
+<span class="font-caption text-caption text-on-surface-variant">Registered institution legal entity name as shown on municipal permits.</span>
+</div>
+<!-- Registration Number -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="regNumber">
+            Clinical Registry Number <span class="text-error font-bold">*</span>
+</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed uppercase" disabled="" id="regNumber" name="regNumber" required="" type="text" value="REG-MH-2018-09412">
+<span class="font-caption text-caption text-on-surface-variant">State Health Directorate Registration Code.</span>
+</div>
+<!-- Hospital Type Selector -->
+<div class="lg:col-span-12 flex flex-col gap-2 pt-pad-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1">
+            Hospital Institution Type <span class="text-error font-bold">*</span>
+</label>
+<div class="flex flex-wrap gap-pad-sm" id="hospitalTypeGroup">
+<label class="relative flex items-center gap-3 px-pad-lg py-2.5 rounded-xl cursor-pointer bg-surface-container text-on-surface font-label-md text-label-md transition-colors has-[:checked]:bg-primary has-[:checked]:text-on-primary min-h-[44px]">
+<input class="accent-primary-fixed w-4 h-4" disabled="" name="hospitalType" type="radio" value="Government">
+<span class="">Government / Municipal</span>
+</label>
+<label class="relative flex items-center gap-3 px-pad-lg py-2.5 rounded-xl cursor-pointer bg-surface-container text-on-surface font-label-md text-label-md transition-colors has-[:checked]:bg-primary has-[:checked]:text-on-primary min-h-[44px]">
+<input checked="" class="accent-primary-fixed w-4 h-4" disabled="" name="hospitalType" type="radio" value="Private">
+<span class="">Private Healthcare</span>
+</label>
+<label class="relative flex items-center gap-3 px-pad-lg py-2.5 rounded-xl cursor-pointer bg-surface-container text-on-surface font-label-md text-label-md transition-colors has-[:checked]:bg-primary has-[:checked]:text-on-primary min-h-[44px]">
+<input class="accent-primary-fixed w-4 h-4" disabled="" name="hospitalType" type="radio" value="Trust">
+<span class="">Trust / Non-Profit / NGO</span>
+</label>
+<label class="relative flex items-center gap-3 px-pad-lg py-2.5 rounded-xl cursor-pointer bg-surface-container text-on-surface font-label-md text-label-md transition-colors has-[:checked]:bg-primary has-[:checked]:text-on-primary min-h-[44px]">
+<input class="accent-primary-fixed w-4 h-4" disabled="" name="hospitalType" type="radio" value="Other">
+<span class="">Autonomous / Corporate</span>
+</label>
+</div>
+</div>
+<!-- Address -->
+<div class="lg:col-span-12 flex flex-col gap-1.5 pt-pad-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="address">
+            Physical Facility Address <span class="text-error font-bold">*</span>
+</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="address" name="address" required="" type="text" value="Plot 14, Central Healthcare Corridor, MG Road">
+</div>
+<!-- City -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="city">
+            City <span class="text-error font-bold">*</span>
+</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="city" name="city" required="" type="text" value="Mumbai">
+</div>
+<!-- State -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="state">
+            State / Province <span class="text-error font-bold">*</span>
+</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="state" name="state" required="" type="text" value="Maharashtra">
+</div>
+<!-- Postal Code -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="pinCode">
+            Postal / PIN Code <span class="text-error font-bold">*</span>
+</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="pinCode" maxlength="6" name="pinCode" pattern="[0-9]{6}" required="" type="text" value="400001">
+<span class="font-caption text-caption text-on-surface-variant">Must be a valid 6-digit postal code.</span>
+</div>
+<!-- Phone Number -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="phone">
+            Hospital Reception Phone <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">call</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="phone" name="phone" required="" type="tel" value="+91 22 2845 0000">
+</div>
+</div>
+<!-- Email Address -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="email">
+            Official Administration Email <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">mail</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="email" name="email" required="" type="email" value="admin@cityhospital.org">
+</div>
+</div>
+<!-- Website -->
+<div class="lg:col-span-4 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="website">
+            Public Website URL
+          </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">public</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="website" name="website" type="url" value="https://www.cityhospital.org">
+</div>
+</div>
+<!-- Emergency Contact Highlight Box -->
+<div class="lg:col-span-12 p-pad-lg rounded-xl bg-error-container/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-pad-md">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-error text-on-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">e911_emergency</span>
+</div>
+<div>
+<label class="font-label-lg text-label-lg text-on-error-container font-semibold flex items-center gap-1" for="emergencyPhone">
+                Emergency &amp; Trauma Hotline (24/7) <span class="text-error font-bold">*</span>
+</label>
+<p class="font-caption text-caption text-on-surface-variant">Direct line to Trauma Triage Desk and rapid response dispatcher. Must be monitored 24/7.</p>
+</div>
+</div>
+<div class="w-full sm:w-auto min-w-[280px]">
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-lowest text-error font-body-bold text-body-bold focus:outline-none transition-all disabled:cursor-not-allowed" disabled="" id="emergencyPhone" name="emergencyPhone" required="" type="tel" value="+91 22 2845 9999">
+</div>
+</div>
+</div>
+</div>
+<!-- 2. HOSPITAL TIMINGS & EMERGENCY OPERATIONS -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex flex-col gap-pad-lg">
+<div class="flex flex-col gap-1 pb-pad-sm">
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">acute</span>
+</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Hospital Timings &amp; Emergency Operations</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Configure round-the-clock availability, ambulance standby stations, and emergency intake status.</p>
+</div>
+<!-- 24 Hours Toggle Panel -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between p-pad-lg rounded-xl bg-surface-container-low gap-pad-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">schedule</span>
+</div>
+<div>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Continuous Inpatient Care (Open 24 Hours)</span>
+<p class="font-caption text-caption text-on-surface-variant">General admissions and acute trauma units operational without overnight closures.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center gap-3 cursor-pointer select-none">
+<input checked="" class="sr-only peer" disabled="" id="open24Hours" onchange="handle24HoursToggle(this.checked)" type="checkbox">
+<div class="w-14 h-8 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+<span class="font-label-md text-label-md font-semibold text-primary" id="open24HoursLabel">Active (24x7)</span>
+</label>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-pad-lg gap-y-pad-lg">
+<!-- Hospital Opening Time -->
+<div class="lg:col-span-3 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="openingTime">Opening Time</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md transition-all disabled:opacity-60 disabled:cursor-not-allowed" disabled="" id="openingTime" name="openingTime" type="text" value="12:00 AM">
+<span class="font-caption text-caption text-on-surface-variant">Defaulted for 24h operational cycle.</span>
+</div>
+<!-- Hospital Closing Time -->
+<div class="lg:col-span-3 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="closingTime">Closing Time</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md transition-all disabled:opacity-60 disabled:cursor-not-allowed" disabled="" id="closingTime" name="closingTime" type="text" value="11:59 PM">
+<span class="font-caption text-caption text-on-surface-variant">Defaulted for 24h operational cycle.</span>
+</div>
+<!-- Emergency Services Status -->
+<div class="lg:col-span-6 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1">
+            Emergency Casualty Desk Status <span class="text-error font-bold">*</span>
+</label>
+<div class="flex items-center gap-3 min-h-[48px]">
+<label class="flex items-center gap-2 px-pad-lg py-2 rounded-xl cursor-pointer bg-secondary-container text-on-secondary-container font-label-md text-label-md font-semibold min-h-[44px]">
+<input checked="" class="accent-primary" disabled="" name="emergencyServiceStatus" type="radio" value="available">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="">Available / Accepting Code Red</span>
+</label>
+<label class="flex items-center gap-2 px-pad-lg py-2 rounded-xl cursor-pointer bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold min-h-[44px]">
+<input class="accent-primary" disabled="" name="emergencyServiceStatus" type="radio" value="unavailable">
+<span class="">Beds Full / Diverted</span>
+</label>
+</div>
+</div>
+<!-- Ambulance Standby Fleet -->
+<div class="lg:col-span-12 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="ambulanceService">
+            Active Ambulance Dispatch Operations <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">airport_shuttle</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="ambulanceService" name="ambulanceService" required="" type="text" value="Available 24/7 (4 Advanced Life Support Ambulances on-duty)">
+</div>
+<span class="font-caption text-caption text-on-surface-variant">Visible to emergency regional helpline dispatchers and local control rooms.</span>
+</div>
+</div>
+</div>
+<!-- 3. OPD INFORMATION SECTION -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex flex-col gap-pad-lg">
+<div class="flex flex-col gap-1 pb-pad-sm">
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">patient_list</span>
+</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">OPD Schedule &amp; Registration Hours</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Outpatient department consultation windows and token counter schedules visible to incoming patients and reception staff.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-pad-lg gap-y-pad-lg">
+<!-- OPD Consultation Hours -->
+<div class="lg:col-span-3 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="opdOpenTime">
+            OPD Opening Time <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">alarm</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="opdOpenTime" name="opdOpenTime" required="" type="text" value="08:00 AM">
+</div>
+</div>
+<div class="lg:col-span-3 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="opdCloseTime">
+            OPD Closing Time <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">alarm_off</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="opdCloseTime" name="opdCloseTime" required="" type="text" value="05:00 PM">
+</div>
+</div>
+<!-- Token Counter Window -->
+<div class="lg:col-span-3 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="regStartTime">
+            Registration Counter Opens <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">badge</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="regStartTime" name="regStartTime" required="" type="text" value="07:30 AM">
+</div>
+<span class="font-caption text-caption text-on-surface-variant">30 minutes prior to clinics start.</span>
+</div>
+<div class="lg:col-span-3 flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="regEndTime">
+            Registration Counter Closes <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 pointer-events-none">schedule_send</span>
+<input class="w-full min-h-[48px] pl-10 pr-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="regEndTime" name="regEndTime" required="" type="text" value="04:00 PM">
+</div>
+<span class="font-caption text-caption text-on-surface-variant">Last token distribution cut-off.</span>
+</div>
+<!-- Weekly Operational Breakdown -->
+<div class="lg:col-span-12 flex flex-col gap-1.5 pt-pad-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1" for="weeklySchedule">
+            Weekly OPD Schedule &amp; Holiday Policy Notice <span class="text-error font-bold">*</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 top-3.5 pointer-events-none">calendar_month</span>
+<textarea class="w-full pl-10 pr-pad-lg py-2.5 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all disabled:opacity-85 disabled:cursor-not-allowed" disabled="" id="weeklySchedule" name="weeklySchedule" required="" rows="2">Monday — Saturday (8:00 AM — 5:00 PM) • Sunday: Emergency Only (Specialist on-call for admitted wards)</textarea>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">Displayed verbatim on appointment booking SMS receipts and patient confirmation slips.</span>
+</div>
+</div>
+</div>
+<!-- 4. AVAILABLE FACILITIES SECTION -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex flex-col gap-pad-lg">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 pb-pad-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">medical_services</span>
+</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Available Facilities</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Select all clinical departments, surgical theaters, diagnostic units, and patient amenities active on hospital premises.</p>
+</div>
+<div class="text-right">
+<span class="font-caption text-caption px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-semibold">
+<span id="selectedFacilitiesCount" class="">11</span> Facilities Active
+          </span>
+</div>
+</div>
+<!-- Facility Checkboxes Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-pad-md" id="facilitiesGrid">
+<!-- Emergency Department -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="emergency">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">local_hospital</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Emergency Dept</span>
+</div>
+</label>
+<!-- Pharmacy -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="pharmacy">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">prescriptions</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Pharmacy (24x7)</span>
+</div>
+</label>
+<!-- Laboratory -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="lab">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">chips</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Pathology Lab</span>
+</div>
+</label>
+<!-- Radiology -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="radiology">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">radiology</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Radiology &amp; CT</span>
+</div>
+</label>
+<!-- Blood Bank -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="blood_bank">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">bloodtype</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Blood Bank</span>
+</div>
+</label>
+<!-- Ambulance -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="ambulance">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">airport_shuttle</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Ambulance Hub</span>
+</div>
+</label>
+<!-- ICU -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="icu">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">monitor_heart</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">ICU / CCU</span>
+</div>
+</label>
+<!-- Operation Theatre -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="ot">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">surgical</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Operation Theatre (OT)</span>
+</div>
+</label>
+<!-- Inpatient Wards -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="wards">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">single_bed</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Inpatient Wards</span>
+</div>
+</label>
+<!-- Cafeteria -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="cafeteria">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">restaurant</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Cafeteria &amp; Nutrition</span>
+</div>
+</label>
+<!-- Parking -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" name="facility" onchange="updateFacilityCounter()" type="checkbox" value="parking">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">local_parking</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Patient Parking</span>
+</div>
+</label>
+<!-- Other -->
+<label class="facility-checkbox flex items-center gap-3 p-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors min-h-[52px]">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary" disabled="" id="facilityOtherCheckbox" name="facility" onchange="toggleOtherFacilityInput(this.checked)" type="checkbox" value="other">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">more_horiz</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Other Amenity</span>
+</div>
+</label>
+</div>
+<!-- Other Facility Input Expansion (Hidden unless Other checked) -->
+<div class="hidden mt-2 pt-pad-sm flex flex-col gap-1.5" id="otherFacilityInputContainer">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="otherFacilityText">Specify Additional Facilities</label>
+<input class="w-full min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none" id="otherFacilityText" name="otherFacilityText" placeholder="e.g. Dialysis Wing, Physiotherapy Rehabilitation Centre, Chemotherapy Daycare" type="text">
+</div>
+</div>
+<!-- 5. CLINICAL LOCATION REFERENCE (Integrated Visual Map View) -->
+
+<!-- DOCKED STICKY BOTTOM FORM ACTION BAR -->
+<div class="fixed bottom-0 left-72 right-0 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-container shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-gutter-desktop py-pad-md z-30 flex flex-col sm:flex-row items-center justify-between gap-pad-md transition-all" id="stickyActionBar">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span class="font-caption text-caption">
+          Last modified by <strong class="text-on-surface font-semibold">Hospital Admin (Dr. Sarah Jenkins)</strong> on 24 May 2024 at 09:45 AM
+        </span>
+</div>
+<div class="flex items-center gap-pad-md w-full sm:w-auto justify-end">
+<button class="hidden min-h-[48px] px-pad-xl rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-lg text-label-lg font-semibold transition-colors" id="cancelBtn" onclick="cancelEditing()" type="button">
+          Cancel
+        </button>
+<button class="min-h-[48px] px-pad-2xl rounded-xl bg-primary disabled:bg-surface-container-high disabled:text-outline-variant text-on-primary font-label-lg text-label-lg font-semibold shadow-sm hover:bg-primary-container active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-not-allowed disabled:cursor-not-allowed" disabled="" id="saveChangesBtn" type="submit">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span class="">Save Changes</span>
+</button>
+</div>
+</div>
+</form>
+</div>
+<script>
+  let isEditMode = false;
+
+  function toggleEditMode() {
+    isEditMode = !isEditMode;
+    applyModeState();
+  }
+
+  function cancelEditing() {
+    isEditMode = false;
+    // Reset form to default saved values
+    document.getElementById('hospitalInfoForm').reset();
+    applyModeState();
+  }
+
+  function applyModeState() {
+    const form = document.getElementById('hospitalInfoForm');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    const toggleEditBtn = document.getElementById('toggleEditBtn');
+    const editBtnIcon = document.getElementById('editBtnIcon');
+    const editBtnText = document.getElementById('editBtnText');
+    const modeBadge = document.getElementById('modeBadge');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const saveChangesBtn = document.getElementById('saveChangesBtn');
+    const photoUploadTrigger = document.getElementById('photoUploadTrigger');
+    const open24Hours = document.getElementById('open24Hours');
+
+    if (isEditMode) {
+      // Enable inputs
+      inputs.forEach(input => {
+        // Keep timing inputs locked if 24 hours is enabled
+        if ((input.id === 'openingTime' || input.id === 'closingTime') && open24Hours.checked) {
+          input.disabled = true;
+        } else {
+          input.disabled = false;
+        }
+      });
+
+      // Update button & badge visual
+      toggleEditBtn.classList.remove('bg-primary', 'text-on-primary');
+      toggleEditBtn.classList.add('bg-surface-container-high', 'text-on-surface');
+      editBtnIcon.textContent = 'visibility';
+      editBtnText.textContent = 'Switch to View';
+
+      modeBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-label-md bg-secondary-container text-on-secondary-container font-semibold';
+      modeBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span> Editable Mode';
+
+      cancelBtn.classList.remove('hidden');
+      saveChangesBtn.disabled = false;
+      saveChangesBtn.classList.remove('cursor-not-allowed');
+      photoUploadTrigger.classList.remove('hidden');
+    } else {
+      // Disable inputs
+      inputs.forEach(input => {
+        input.disabled = true;
+      });
+
+      // Update button & badge visual
+      toggleEditBtn.classList.add('bg-primary', 'text-on-primary');
+      toggleEditBtn.classList.remove('bg-surface-container-high', 'text-on-surface');
+      editBtnIcon.textContent = 'edit_square';
+      editBtnText.textContent = 'Edit Information';
+
+      modeBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-label-md bg-surface-container-high text-on-surface-variant font-semibold';
+      modeBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-outline"></span> Viewing Mode';
+
+      cancelBtn.classList.add('hidden');
+      saveChangesBtn.disabled = true;
+      saveChangesBtn.classList.add('cursor-not-allowed');
+      photoUploadTrigger.classList.add('hidden');
+    }
+  }
+
+  function handle24HoursToggle(checked) {
+    const openingInput = document.getElementById('openingTime');
+    const closingInput = document.getElementById('closingTime');
+    const label = document.getElementById('open24HoursLabel');
+
+    if (checked) {
+      openingInput.value = '12:00 AM';
+      closingInput.value = '11:59 PM';
+      openingInput.disabled = true;
+      closingInput.disabled = true;
+      label.textContent = 'Active (24x7)';
+      label.className = 'font-label-md text-label-md font-semibold text-primary';
+    } else {
+      openingInput.disabled = !isEditMode;
+      closingInput.disabled = !isEditMode;
+      label.textContent = 'Standard Shift';
+      label.className = 'font-label-md text-label-md font-semibold text-on-surface-variant';
+    }
+  }
+
+  function toggleOtherFacilityInput(checked) {
+    const container = document.getElementById('otherFacilityInputContainer');
+    if (checked) {
+      container.classList.remove('hidden');
+    } else {
+      container.classList.add('hidden');
+    }
+    updateFacilityCounter();
+  }
+
+  function updateFacilityCounter() {
+    const checkedCount = document.querySelectorAll('input[name="facility"]:checked').length;
+    document.getElementById('selectedFacilitiesCount').textContent = checkedCount;
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    // Simulate save request
+    const banner = document.getElementById('saveSuccessBanner');
+    banner.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Exit editing mode back to view mode
+    isEditMode = false;
+    applyModeState();
+
+    // Auto dismiss after 8 seconds
+    setTimeout(() => {
+      dismissNotification();
+    }, 8000);
+  }
+
+  function dismissNotification() {
+    const banner = document.getElementById('saveSuccessBanner');
+    banner.classList.add('hidden');
+  }
+</script></main></div>
+
+
+
+</body></html>

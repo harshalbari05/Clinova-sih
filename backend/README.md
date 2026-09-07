@@ -293,27 +293,30 @@ curl -X PUT "http://localhost:8000/api/v1/patients/me" \
 
 ---
 
-## 10. Consultation Endpoints (Step 2)
+## 10. Consultation & Queue Endpoints (Step 2 & Step 10A.1)
 
-### Authentication Requirement
-All consultation endpoints require a valid `Bearer` JWT for a **patient** account.
+### Authentication & Authorization Requirements
+Consultation endpoints support both patient accounts and hospital staff accounts with strict role-based data partitioning:
 
 | Method | Endpoint | Auth Required | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/consultations` | Bearer JWT (Patient) | Create a new consultation |
-| `GET` | `/api/v1/consultations` | Bearer JWT (Patient) | List authenticated patient's consultations |
-| `GET` | `/api/v1/consultations/{id}` | Bearer JWT (Patient) | Get a single consultation by ID |
+| `POST` | `/api/v1/consultations` | Bearer JWT (Patient) | Create a new consultation for the authenticated patient |
+| `GET` | `/api/v1/consultations` | Bearer JWT (Patient or Hospital Staff) | List consultations (Patients: own history DESC; Hospital Staff: facility OPD queue ASC) |
+| `GET` | `/api/v1/consultations/{id}` | Bearer JWT (Patient or Hospital Staff) | Get a single consultation by ID (enforces patient ownership or facility scope) |
+| `POST` | `/api/v1/consultations/{id}/consent` | Bearer JWT (Patient) | Record explicit informed consent for clinical intake & AI processing |
 
-### Ownership & Security Rules
-- `patient_id` is **always derived from the authenticated JWT** — clients cannot inject a different `patient_id`.
-- A patient can **only** see their own consultations. Attempting to access another patient's consultation returns `HTTP 404` (not 403) to avoid leaking existence information.
-- `hospital_id` must reference an existing hospital; an invalid ID returns `HTTP 404`.
-- Consultation status defaults to `"initiated"` at creation.
+### Ownership, Queue Discipline & Security Rules
+- `patient_id` is **always derived from the authenticated JWT** — clients cannot inject an arbitrary `patient_id`.
+- **Patient Context**: A patient can only view their own consultations. Consultations are sorted **newest-first** (`created_at DESC`).
+- **Hospital Staff Context**: Doctors and hospital admins receive consultations affiliated with their registered facility. Consultations are sorted **oldest-first** (`created_at ASC`) following strict FIFO queue discipline for OPD triage.
+- **Cross-Facility Isolation**: Attempts by a hospital user to view another facility's consultations return safe `HTTP 404 Not Found` (never leaking existence).
+- **Status Filter**: Optional query parameter `?status=initiated` (or `reviewed`, `in_progress`) filters the consultation list.
+- **Informed Consent**: Recording consent requires patient ownership. Authoritative server timestamps are generated, and duplicate requests are handled idempotently without creating redundant records.
 
 ### POST /api/v1/consultations
 ```bash
 curl -X POST "http://localhost:8000/api/v1/consultations" \
-  -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
+  -H "Authorization: Bearer <PATIENT_ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
     "hospital_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -338,20 +341,30 @@ curl -X POST "http://localhost:8000/api/v1/consultations" \
 
 ### GET /api/v1/consultations
 ```bash
-# Default (20 results, newest first)
+# Patient: returns own consultations (newest first)
+# Doctor: returns hospital OPD queue (FIFO, oldest first)
 curl -X GET "http://localhost:8000/api/v1/consultations" \
   -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
 
-# With pagination
-curl -X GET "http://localhost:8000/api/v1/consultations?limit=10&offset=0" \
+# With status filter and pagination
+curl -X GET "http://localhost:8000/api/v1/consultations?status=initiated&limit=20&offset=0" \
   -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
 ```
 
 **Example Response:**
 ```json
 {
-  "items": [ { "id": "...", "status": "initiated", ... } ],
-  "total": 5,
+  "items": [
+    {
+      "id": "a1b2c3d4-...",
+      "patient_id": "4ab93c21-...",
+      "hospital_id": "3fa85f64-...",
+      "status": "initiated",
+      "chief_complaint": "Persistent headache for 3 days",
+      "created_at": "2026-09-05T10:30:00Z"
+    }
+  ],
+  "total": 1,
   "limit": 20,
   "offset": 0
 }
@@ -361,6 +374,70 @@ curl -X GET "http://localhost:8000/api/v1/consultations?limit=10&offset=0" \
 ```bash
 curl -X GET "http://localhost:8000/api/v1/consultations/a1b2c3d4-..." \
   -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+```
+
+### POST /api/v1/consultations/{consultation_id}/consent
+Record explicit patient informed consent for intake processing and AI analysis:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/consultations/a1b2c3d4-.../consent" \
+  -H "Authorization: Bearer <PATIENT_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "consent_given": true,
+    "consent_type": "clinical_intake"
+  }'
+```
+
+**Example Response (HTTP 201):**
+```json
+{
+  "id": "c9d8e7f6-...",
+  "patient_id": "4ab93c21-...",
+  "consultation_id": "a1b2c3d4-...",
+  "consent_type": "clinical_intake",
+  "granted": true,
+  "version": "v1.0",
+  "timestamp": "2026-09-07T07:50:00Z",
+  "revoked_at": null
+}
+```
+
+---
+
+## 10.1. Public Hospital Directory (Step 10A.1)
+
+Enables unauthenticated patients to browse registered hospital facilities for registration and appointment booking.
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/hospitals` | None (Public) | List active hospital facilities ordered alphabetically |
+
+### Security & Privacy Rules
+- **Public Read-Only**: No authentication required.
+- **Privacy Shield**: Never exposes sensitive internal facility details (e.g. registration numbers, contact emails, internal staff IDs). Only returns safe fields (`id`, `name`, `city`, `state`).
+
+### GET /api/v1/hospitals
+```bash
+curl -X GET "http://localhost:8000/api/v1/hospitals"
+```
+
+**Example Response (HTTP 200):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "name": "Apollo Multispecialty Hospital",
+    "city": "Mumbai",
+    "state": "Maharashtra"
+  },
+  {
+    "id": "7ca21e89-1122-3344-5566-778899aabbcc",
+    "name": "Manipal Hospital",
+    "city": "Bengaluru",
+    "state": "Karnataka"
+  }
+]
 ```
 
 ---
@@ -379,18 +456,23 @@ curl -X GET "http://localhost:8000/api/v1/consultations/a1b2c3d4-..." \
 
 ---
 
-## 12. Implemented Steps
+## 12. Implemented Steps & Milestones
 
 | Step | Feature | Status |
 | :--- | :--- | :--- |
 | Step 1 | Authentication (Patient + Hospital, JWT, bcrypt) | ✅ Complete |
 | Step 2 | Patient Profile + Consultation Management | ✅ Complete |
-| Step 3 | Clinical History & AI Interview | 🔜 Not started |
-| Step 4 | Document Upload (OCR) | 🔜 Not started |
-| Step 5 | Timeline & Summary | 🔜 Not started |
-| Step 6 | Hospital Review Dashboard | 🔜 Not started |
+| Step 3 | Clinical History (Structured Family, Surgical, Social History) | ✅ Complete |
+| Step 4 | AI Sessions & Messages (Turn-by-turn pre-consultation chat) | ✅ Complete |
+| Step 5A | Multi-Provider AI Architecture (Gemini, Groq, Ollama) | ✅ Complete |
+| Step 5B | Adaptive AI Clinical Interview Engine | ✅ Complete |
+| Step 6 | Red-Flag Detection & Emergency Triage Engine | ✅ Complete |
+| Step 7 | Medical Document Upload + OCR + Structured Extraction | ✅ Complete |
+| Step 8 | Structured Chronological Medical Timeline | ✅ Complete |
+| Step 9 | AI Clinical Summary + Physician Review Dashboard | ✅ Complete |
+| Step 10A.1 | Minimal Backend Gaps (Hospital Queue, Hospital Directory, Consent Endpoint) | ✅ Complete |
+| Step 10B | Patient Web Portal Implementation | 🔜 Next |
 
-> Clinical history, AI interview, OCR document processing, and ABDM integration are **not yet implemented**.
 
 ---
 

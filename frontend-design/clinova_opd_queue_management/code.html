@@ -1,0 +1,931 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>CLINOVA Workstation - City Hospital</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary-fixed": "#001d31",
+          "on-surface": "#131b2e",
+          "on-error-container": "#93000a",
+          "surface-tint": "#006a61",
+          "surface-container": "#eaedff",
+          "tertiary-fixed-dim": "#93ccff",
+          "on-tertiary-container": "#fdfcff",
+          "outline": "#6d7a77",
+          "outline-variant": "#bcc9c6",
+          "inverse-primary": "#6bd8cb",
+          "inverse-on-surface": "#eef0ff",
+          "on-tertiary-fixed-variant": "#004b73",
+          "tertiary": "#006194",
+          "secondary-fixed-dim": "#80d5cb",
+          "tertiary-fixed": "#cce5ff",
+          "primary-fixed-dim": "#6bd8cb",
+          "on-tertiary": "#ffffff",
+          "background": "#faf8ff",
+          "on-primary-container": "#f4fffc",
+          "surface-container-lowest": "#ffffff",
+          "primary-fixed": "#89f5e7",
+          "surface-container-low": "#f2f3ff",
+          "primary": "#00685f",
+          "surface-dim": "#d2d9f4",
+          "primary-container": "#008378",
+          "secondary-fixed": "#9cf2e8",
+          "error-container": "#ffdad6",
+          "on-surface-variant": "#3d4947",
+          "on-secondary-fixed-variant": "#00504a",
+          "on-secondary": "#ffffff",
+          "on-primary-fixed": "#00201d",
+          "error": "#ba1a1a",
+          "surface-variant": "#dae2fd",
+          "on-secondary-container": "#006f67",
+          "surface": "#faf8ff",
+          "surface-container-high": "#e2e7ff",
+          "on-error": "#ffffff",
+          "secondary-container": "#99efe5",
+          "surface-bright": "#faf8ff",
+          "inverse-surface": "#283044",
+          "surface-container-highest": "#dae2fd",
+          "tertiary-container": "#007bb9",
+          "on-primary-fixed-variant": "#005049",
+          "secondary": "#006a63",
+          "on-background": "#131b2e",
+          "on-primary": "#ffffff",
+          "on-secondary-fixed": "#00201d"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "gutter-desktop": "2rem",
+          "gap-grid": "1.5rem",
+          "pad-lg": "1rem",
+          "pad-2xl": "2rem",
+          "pad-xl": "1.5rem",
+          "pad-sm": "0.5rem",
+          "pad-md": "0.75rem",
+          "gutter-mobile": "1rem",
+          "pad-xs": "0.25rem",
+          "touch-min": "3rem"
+        },
+        "fontFamily": {
+          "caption": ["Manrope"],
+          "headline-lg": ["Manrope"],
+          "body-xl": ["Manrope"],
+          "body-lg": ["Manrope"],
+          "display-lg-mobile": ["Manrope"],
+          "label-md": ["Manrope"],
+          "label-lg": ["Manrope"],
+          "headline-md": ["Manrope"],
+          "body-md": ["Manrope"],
+          "display-lg": ["Manrope"],
+          "headline-sm": ["Manrope"],
+          "body-bold": ["Manrope"]
+        },
+        "fontSize": {
+          "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+          "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+          "body-xl": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+          "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+          "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+          "label-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+          "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+          "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+          "body-md": ["15px", {"lineHeight": "22px", "fontWeight": "400"}],
+          "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+          "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+          "body-bold": ["16px", {"lineHeight": "24px", "fontWeight": "600"}]
+        }
+      }
+    }
+  };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 bottom-0 w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-20 px-pad-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-pad-md"><div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-2xl">local_hospital</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-tight">CLINOVA</span><span class="font-caption text-caption text-on-surface-variant">City Hospital • Central</span></div></div><span class="px-pad-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption">v2.4</span></div><div class="px-pad-lg py-pad-xs"><div class="p-pad-md rounded-xl bg-surface-container-low flex items-center gap-pad-sm"><span class="material-symbols-outlined text-primary text-lg">verified_user</span><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">NABH Accredited</span><span class="font-caption text-caption text-on-surface-variant">Standard Compliance v2.4</span></div></div></div><nav class="flex flex-col gap-1 px-pad-md mt-pad-sm" data-active-classes="bg-primary text-on-primary font-body-bold rounded-xl"><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><span class="font-label-lg text-label-lg">Dashboard</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="patients" href="#"><span class="material-symbols-outlined text-xl">personal_injury</span><span class="font-label-lg text-label-lg">Patients</span></a><a aria-current="page" class="flex items-center justify-between px-pad-md min-h-[48px] transition-colors bg-primary text-on-primary font-body-bold rounded-xl" data-path="opd-queue" href="#"><div class="flex items-center gap-pad-md"><span class="material-symbols-outlined text-xl">clinical_notes</span><span class="font-label-lg text-label-lg">OPD Queue</span></div><span class="w-2 h-2 rounded-full bg-primary-fixed"></span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="departments" href="#"><span class="material-symbols-outlined text-xl">apartment</span><span class="font-label-lg text-label-lg">Departments</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="doctors" href="#"><span class="material-symbols-outlined text-xl">stethoscope</span><span class="font-label-lg text-label-lg">Doctors</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="medical-documents" href="#"><span class="material-symbols-outlined text-xl">folder_shared</span><span class="font-label-lg text-label-lg">Medical Documents</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="hospital-information" href="#"><span class="material-symbols-outlined text-xl">domain</span><span class="font-label-lg text-label-lg">Hospital Information</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="abdm-his" href="#"><span class="material-symbols-outlined text-xl">hub</span><span class="font-label-lg text-label-lg">ABDM / HIS</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="consent-and-privacy" href="#"><span class="material-symbols-outlined text-xl">policy</span><span class="font-label-lg text-label-lg">Consent &amp; Privacy</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-xl">monitoring</span><span class="font-label-lg text-label-lg">Analytics</span></a><a class="flex items-center gap-pad-md px-pad-md min-h-[48px] rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-xl">tune</span><span class="font-label-lg text-label-lg">Settings</span></a></nav></div><div class="p-pad-md m-pad-md rounded-xl bg-surface-container-low flex flex-col gap-pad-xs"><div class="flex items-center gap-pad-sm text-on-surface-variant"><span class="material-symbols-outlined text-lg text-primary">headset_mic</span><span class="font-label-md text-label-md text-on-surface">Clinical Desk Support</span></div><p class="font-caption text-caption text-on-surface-variant">Ext: 4022 • Priority HIS Bridge</p><a class="font-label-md text-label-md text-primary hover:text-primary-container transition-colors mt-pad-xs inline-flex items-center gap-1" data-path="hospital-support" href="#">Contact Support <span class="material-symbols-outlined text-sm">arrow_forward</span></a></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-20 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-pad-2xl"><div class="flex items-center gap-pad-xl"><div class="flex items-center gap-pad-sm px-pad-md py-1.5 rounded-full bg-surface-container-low text-on-surface"><span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span><span class="font-label-lg text-label-lg font-bold">City Hospital</span><span class="text-outline-variant font-body-md">•</span><span class="font-body-md text-body-md text-on-surface-variant">Central Complex</span></div><div class="flex items-center gap-pad-xs text-on-surface-variant font-label-md text-label-md"><span class="material-symbols-outlined text-lg">calendar_today</span><span class="">Today — 5 September 2026</span></div></div><div class="flex items-center gap-pad-lg"><span class="px-pad-md py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md tracking-wide uppercase">Admin Clearance</span><button aria-label="Notifications" class="relative w-11 h-11 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-2xl">notifications</span><span class="absolute top-2 right-2 w-4 h-4 rounded-full bg-error text-on-error font-caption text-caption flex items-center justify-center leading-none">3</span></button><div class="h-8 w-px bg-surface-container-high"></div><div class="h-8 w-px bg-surface-container-high"></div><a class="flex items-center gap-1 font-label-lg text-label-lg text-error hover:text-on-surface transition-colors py-pad-xs" data-path="logout" href="#"><span class="material-symbols-outlined text-xl">logout</span><span class="">Logout</span></a></div></header><main class="w-full pt-20 px-pad-2xl bg-background min-h-screen"><div class="flex flex-col w-full pb-16">
+<!-- TOP CONTEXT / PAGE HEADER -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-pad-lg mb-pad-xl pt-pad-md">
+<div class="flex flex-col gap-pad-xs">
+<div class="flex items-center gap-pad-sm flex-wrap">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">OPD Queue</h1>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-md text-label-md">Live Token Dispatch • 4 Consultation Rooms Active</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage today's clinical intake flow, consultation room dispatches, and emergency routing.</p>
+</div>
+<div class="flex items-center gap-pad-md flex-wrap">
+<button class="min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center gap-pad-sm transition-colors shadow-sm focus:outline-none" id="audioChimeToggle" onclick="toggleAudioChime()" type="button">
+<span class="material-symbols-outlined text-primary text-xl" id="audioChimeIcon">volume_up</span>
+<span class="font-label-lg text-label-lg" id="audioChimeText">Audio Chime: Active</span>
+</button>
+<button class="min-h-[48px] px-pad-lg rounded-xl bg-surface-container-low hover:bg-surface-container text-primary flex items-center gap-pad-sm transition-colors shadow-sm focus:outline-none" onclick="triggerQuickBroadcast()" type="button">
+<span class="material-symbols-outlined text-xl">campaign</span>
+<span class="font-label-lg text-label-lg">Broadcast Next Token</span>
+</button>
+<button class="min-h-[48px] px-pad-xl rounded-xl bg-primary hover:bg-primary-container text-on-primary flex items-center gap-pad-sm transition-colors shadow-sm focus:outline-none" onclick="openAddPatientDrawer()" type="button">
+<span class="material-symbols-outlined text-xl font-bold">person_add</span>
+<span class="font-label-lg text-label-lg tracking-wide">+ Add Patient</span>
+</button>
+</div>
+</section>
+<!-- DEPARTMENT & CONTROL FILTER BAR -->
+<section class="bg-surface-container-lowest rounded-xl p-pad-md shadow-sm mb-pad-xl flex flex-col xl:flex-row xl:items-center justify-between gap-pad-md">
+<!-- Department Tabs -->
+<div class="flex items-center gap-1 overflow-x-auto pb-1 xl:pb-0" id="deptTabsContainer">
+<button class="dept-tab min-h-[44px] px-pad-lg rounded-xl bg-primary text-on-primary font-label-lg text-label-lg transition-colors whitespace-nowrap" onclick="filterDept(this, 'all')" type="button">All Departments</button>
+<button class="dept-tab min-h-[44px] px-pad-lg rounded-xl text-on-surface-variant hover:bg-surface-container-low font-label-lg text-label-lg transition-colors whitespace-nowrap" onclick="filterDept(this, 'General Medicine')" type="button">General Medicine</button>
+<button class="dept-tab min-h-[44px] px-pad-lg rounded-xl text-on-surface-variant hover:bg-surface-container-low font-label-lg text-label-lg transition-colors whitespace-nowrap" onclick="filterDept(this, 'Cardiology')" type="button">Cardiology</button>
+<button class="dept-tab min-h-[44px] px-pad-lg rounded-xl text-on-surface-variant hover:bg-surface-container-low font-label-lg text-label-lg transition-colors whitespace-nowrap" onclick="filterDept(this, 'Orthopedics')" type="button">Orthopedics</button>
+<button class="dept-tab min-h-[44px] px-pad-lg rounded-xl text-on-surface-variant hover:bg-surface-container-low font-label-lg text-label-lg transition-colors whitespace-nowrap" onclick="filterDept(this, 'Pediatrics')" type="button">Pediatrics</button>
+</div>
+<!-- Search & Secondary Dropdowns -->
+<div class="flex items-center gap-pad-sm flex-wrap xl:flex-nowrap">
+<div class="relative flex-1 min-w-[260px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl pointer-events-none">search</span>
+<input class="w-full min-h-[44px] pl-10 pr-pad-md bg-surface-container-low rounded-xl font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-inner" id="queueSearchInput" oninput="handleTableSearch(this.value)" placeholder="Search token, patient name, or MRN..." type="text">
+</div>
+<div class="relative">
+<select class="min-h-[44px] pl-pad-md pr-9 bg-surface-container-low rounded-xl font-label-md text-on-surface focus:outline-none appearance-none cursor-pointer" id="doctorFilter" onchange="filterDoctor(this.value)">
+<option value="all">All Assigned Doctors</option>
+<option value="Dr. Amit Sharma">Dr. Amit Sharma (102)</option>
+<option value="Dr. Neha Patil">Dr. Neha Patil (201)</option>
+<option value="Dr. Rahul Joshi">Dr. Rahul Joshi (105)</option>
+<option value="Dr. Priya Shah">Dr. Priya Shah (108)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg pointer-events-none">expand_more</span>
+</div>
+<div class="hidden sm:flex items-center gap-1.5 px-pad-md min-h-[44px] bg-surface-container-low rounded-xl text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-base">calendar_today</span>
+<span class="font-label-md text-label-md whitespace-nowrap">Today — 5 Sept 2026</span>
+</div>
+</div>
+</section>
+<!-- QUEUE SUMMARY METRIC CARDS -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-pad-lg mb-pad-xl">
+<!-- Waiting -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex items-start justify-between">
+<div class="flex flex-col gap-pad-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Waiting</span>
+<div class="flex items-baseline gap-pad-sm">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">24</span>
+<span class="font-caption text-caption text-primary font-semibold">In lounge</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">Avg wait time ~11 mins</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">hourglass_empty</span>
+</div>
+</div>
+<!-- In Consultation -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex items-start justify-between">
+<div class="flex flex-col gap-pad-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">In Consultation</span>
+<div class="flex items-baseline gap-pad-sm">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">4</span>
+<span class="font-caption text-caption text-secondary font-semibold">100% capacity</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">Across Rooms 101–104</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-2xl">medical_services</span>
+</div>
+</div>
+<!-- Completed -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex items-start justify-between">
+<div class="flex flex-col gap-pad-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Completed</span>
+<div class="flex items-baseline gap-pad-sm">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">76</span>
+<span class="font-caption text-caption text-primary font-semibold">On target</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">Consultations finished today</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-2xl">check_circle</span>
+</div>
+</div>
+<!-- Priority / Urgent -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-xl shadow-sm flex items-start justify-between">
+<div class="flex flex-col gap-pad-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Priority / Urgent</span>
+<div class="flex items-baseline gap-pad-sm">
+<span class="font-display-lg text-display-lg text-error leading-none">3</span>
+<span class="font-caption text-caption text-error font-semibold">Action needed</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">Requires prompt dispatch</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined text-2xl">emergency</span>
+</div>
+</div>
+</section>
+<!-- ACTIVE CALL & DISPATCH BANNER (SPLIT CLINICAL HUB) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm p-pad-xl mb-pad-xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-pad-xl items-stretch">
+<!-- Left Column: Now in Consultation -->
+<div class="lg:col-span-6 flex flex-col justify-between bg-surface-container-low rounded-xl p-pad-xl">
+<div class="flex items-center justify-between mb-pad-md">
+<div class="flex items-center gap-pad-sm">
+<span class="w-3 h-3 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-lg text-label-lg text-primary uppercase tracking-wide">Now in Consultation</span>
+</div>
+<div class="px-pad-sm py-0.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-caption text-caption flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-primary">schedule</span>
+<span id="activeTimer" class="">14 mins elapsed</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center gap-pad-lg my-pad-sm">
+<div class="px-pad-lg py-pad-md rounded-xl bg-primary text-on-primary flex flex-col items-center justify-center shadow-sm min-w-[120px]">
+<span class="font-caption text-caption opacity-80 uppercase tracking-wider">Current</span>
+<span class="font-headline-lg text-headline-lg leading-none mt-1">#23</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-pad-sm flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Meera Kulkarni</span>
+<span class="font-label-md text-label-md text-on-surface-variant">48y • Female</span>
+<span class="px-2 py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption">Routine Follow-up</span>
+</div>
+<div class="flex items-center gap-pad-md mt-pad-xs flex-wrap font-body-md text-body-md text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base text-primary">apartment</span> General Medicine</span>
+<span class="">•</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base text-primary">stethoscope</span> Dr. Amit Sharma (Wing A, Room 102)</span>
+</div>
+</div>
+</div>
+<div class="mt-pad-md pt-pad-md flex items-center justify-between border-t border-surface-container">
+<span class="font-caption text-caption text-on-surface-variant">Consultation started at 11:22 AM</span>
+<button class="font-label-md text-label-md text-primary hover:text-primary-container inline-flex items-center gap-1 font-semibold" onclick="alert('Completing session for Token #23 and updating EHR file.')" type="button">
+            Mark Completed &amp; Transfer EHR <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Right Column: Calling Next Patient Hub -->
+<div class="lg:col-span-6 flex flex-col justify-between bg-surface-container-low rounded-xl p-pad-xl">
+<div class="flex items-center justify-between mb-pad-xs">
+<div class="flex items-center gap-pad-xs text-on-surface">
+<span class="material-symbols-outlined text-primary text-xl">campaign</span>
+<span class="font-label-lg text-label-lg">Calling Next Patient</span>
+</div>
+<span class="px-pad-sm py-0.5 rounded-md bg-surface-container-high text-on-surface font-caption text-caption">PA Dispatch Station #1</span>
+</div>
+<!-- Call preview card -->
+<div class="bg-surface-container-lowest rounded-xl p-pad-md shadow-sm my-pad-sm flex flex-col gap-pad-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-pad-sm">
+<span class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface font-headline-sm text-headline-sm font-bold">24</span>
+<div>
+<span class="font-body-bold text-body-bold text-on-surface">Rahul Sharma</span>
+<span class="font-caption text-caption text-on-surface-variant ml-2">42y M • #CLN1024</span>
+</div>
+</div>
+<span class="px-pad-sm py-0.5 rounded-full bg-surface-container text-on-surface-variant font-caption text-caption">General Medicine</span>
+</div>
+<p class="font-body-md text-body-md text-primary mt-1 font-medium flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base">volume_up</span>
+            "Token 24 — Please proceed to General Medicine — Room 102"
+          </p>
+</div>
+<!-- Quick actions -->
+<div class="flex items-center gap-pad-md flex-wrap sm:flex-nowrap mt-pad-xs">
+<button class="flex-1 min-h-[48px] px-pad-lg rounded-xl bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-pad-sm shadow-sm transition-colors" onclick="confirmCallNext('24', 'Rahul Sharma', 'General Medicine - Room 102')" type="button">
+<span class="material-symbols-outlined text-xl">record_voice_over</span>
+<span class="">Confirm Call &amp; Dispatch</span>
+</button>
+<button class="min-h-[48px] px-pad-md rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-1 transition-colors" onclick="reannounceChime('24')" title="Repeat Announcement" type="button">
+<span class="material-symbols-outlined text-xl text-primary">replay</span>
+<span class="hidden sm:inline">Re-chime</span>
+</button>
+<button class="min-h-[48px] px-pad-md rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-error font-label-lg text-label-lg flex items-center justify-center gap-1 transition-colors" onclick="postponeToken('24')" title="Postpone or skip token" type="button">
+<span class="material-symbols-outlined text-xl">next_plan</span>
+<span class="hidden sm:inline">Postpone</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- QUEUE TABLE & MANAGEMENT ROSTER -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Section Header -->
+<div class="p-pad-xl flex flex-col sm:flex-row sm:items-center justify-between gap-pad-md bg-surface-container-lowest">
+<div class="flex items-center gap-pad-md">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Live Queue Roster</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-low text-on-surface-variant font-caption text-caption" id="activeRosterCount">24 Waiting</span>
+</div>
+<div class="flex items-center gap-pad-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-caption text-caption">
+<span class="material-symbols-outlined text-primary text-base animate-spin" style="animation-duration: 4s;">sync</span>
+<span class="">Auto-refresh: 15s</span>
+</div>
+<button class="min-h-[44px] px-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1.5 transition-colors" onclick="refreshQueue()" type="button">
+<span class="material-symbols-outlined text-base">refresh</span>
+<span class="">Manual Sync</span>
+</button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse" id="queueTable">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="py-pad-md px-pad-xl font-bold">Token</th>
+<th class="py-pad-md px-pad-md font-bold">Patient Details</th>
+<th class="py-pad-md px-pad-md font-bold">Department</th>
+<th class="py-pad-md px-pad-md font-bold">Assigned Doctor &amp; Room</th>
+<th class="py-pad-md px-pad-md font-bold">Priority Status</th>
+<th class="py-pad-md px-pad-md font-bold">Wait Time</th>
+<th class="py-pad-md px-pad-md font-bold">Status</th>
+<th class="py-pad-md px-pad-xl font-bold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container" id="queueTableBody">
+<!-- Row 1: Rahul Sharma (Token 24) -->
+<tr class="hover:bg-surface-container-low/60 transition-colors" data-dept="General Medicine" data-doc="Dr. Amit Sharma" data-token="24">
+<td class="py-pad-lg px-pad-xl">
+<span class="font-headline-sm text-headline-sm font-bold text-primary">#24</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-body-bold text-body-bold text-on-surface">Rahul Sharma</span>
+<span class="font-caption text-caption text-on-surface-variant">42y M • #CLN1024</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface">General Medicine</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Dr. Amit Sharma</span>
+<span class="font-caption text-caption text-on-surface-variant">Wing A • Room 102</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md">
+                Normal
+              </span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface font-semibold">12 min</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Waiting
+              </span>
+</td>
+<td class="py-pad-lg px-pad-xl text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="min-h-[44px] px-pad-md rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md flex items-center gap-1 transition-colors" onclick="callSinglePatient('24', 'Rahul Sharma', 'Room 102')" type="button">
+<span class="material-symbols-outlined text-base">campaign</span>
+<span class="">Call</span>
+</button>
+<button class="min-h-[44px] px-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" onclick="showSummary('CLN1024', 'Rahul Sharma', 'Seasonal respiratory symptoms follow-up, BP stability check.')" title="View Summary" type="button">
+                  Summary
+                </button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="togglePriorityChange('24')" title="Change Priority" type="button">
+<span class="material-symbols-outlined text-lg">flag</span>
+</button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="removeOrPostpone('24')" title="Postpone or Cancel" type="button">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Sneha Patil (Token 25) with ALERT BADGE -->
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-error-container/10" data-dept="Cardiology" data-doc="Dr. Neha Patil" data-token="25">
+<td class="py-pad-lg px-pad-xl">
+<span class="font-headline-sm text-headline-sm font-bold text-error">#25</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-pad-xs">
+<span class="font-body-bold text-body-bold text-on-surface">Sneha Patil</span>
+<span class="font-caption text-caption text-on-surface-variant">54y F • #CLN1099</span>
+</div>
+<!-- Alert Banner for Review -->
+<div class="p-pad-xs pr-pad-md rounded-lg bg-error-container text-on-error-container font-caption text-caption flex items-start gap-1.5 max-w-md">
+<span class="material-symbols-outlined text-base text-error mt-0.5">warning</span>
+<div>
+<span class="font-bold">Potential Alert — Review Required</span>
+<p class="leading-tight text-on-error-container/90 mt-0.5">Patient reported mild chest tightness. Authorized staff must make final triage decision.</p>
+</div>
+</div>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface">Cardiology</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Dr. Neha Patil</span>
+<span class="font-caption text-caption text-on-surface-variant">Wing B • Room 201</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error text-on-error font-label-md text-label-md font-bold">
+<span class="material-symbols-outlined text-sm">priority_high</span>
+                Urgent
+              </span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-error font-bold">8 min</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-md text-label-md font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                Triage Review
+              </span>
+</td>
+<td class="py-pad-lg px-pad-xl text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="min-h-[44px] px-pad-md rounded-xl bg-error text-on-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md flex items-center gap-1 transition-colors" onclick="callSinglePatient('25', 'Sneha Patil', 'Room 201 - Cardiology Priority')" type="button">
+<span class="material-symbols-outlined text-base">campaign</span>
+<span class="">Call Urgent</span>
+</button>
+<button class="min-h-[44px] px-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" onclick="showSummary('CLN1099', 'Sneha Patil', 'Sudden episodic retrosternal pressure since early morning. SpO2 96%, HR 92 bpm.')" type="button">
+                  Summary
+                </button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="togglePriorityChange('25')" type="button">
+<span class="material-symbols-outlined text-lg">flag</span>
+</button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="removeOrPostpone('25')" type="button">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Vikram Mehta (Token 26) -->
+<tr class="hover:bg-surface-container-low/60 transition-colors" data-dept="Orthopedics" data-doc="Dr. Rahul Joshi" data-token="26">
+<td class="py-pad-lg px-pad-xl">
+<span class="font-headline-sm text-headline-sm font-bold text-primary">#26</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-body-bold text-body-bold text-on-surface">Vikram Mehta</span>
+<span class="font-caption text-caption text-on-surface-variant">36y M • #CLN1140</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface">Orthopedics</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Dr. Rahul Joshi</span>
+<span class="font-caption text-caption text-on-surface-variant">Wing A • Room 105</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">
+                Priority
+              </span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface font-semibold">5 min</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Waiting
+              </span>
+</td>
+<td class="py-pad-lg px-pad-xl text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="min-h-[44px] px-pad-md rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md flex items-center gap-1 transition-colors" onclick="callSinglePatient('26', 'Vikram Mehta', 'Room 105')" type="button">
+<span class="material-symbols-outlined text-base">campaign</span>
+<span class="">Call</span>
+</button>
+<button class="min-h-[44px] px-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" onclick="showSummary('CLN1140', 'Vikram Mehta', 'Right ankle sprain assessment post-football practice. Splint applied.')" type="button">
+                  Summary
+                </button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="togglePriorityChange('26')" type="button">
+<span class="material-symbols-outlined text-lg">flag</span>
+</button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="removeOrPostpone('26')" type="button">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Ananya Iyer (Token 27) -->
+<tr class="hover:bg-surface-container-low/60 transition-colors" data-dept="Pediatrics" data-doc="Dr. Priya Shah" data-token="27">
+<td class="py-pad-lg px-pad-xl">
+<span class="font-headline-sm text-headline-sm font-bold text-primary">#27</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-body-bold text-body-bold text-on-surface">Ananya Iyer (Child)</span>
+<span class="font-caption text-caption text-on-surface-variant">5y F • #CLN1201</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface">Pediatrics</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Dr. Priya Shah</span>
+<span class="font-caption text-caption text-on-surface-variant">Wing C • Room 108</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md">
+                Normal
+              </span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface font-semibold">2 min</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Waiting
+              </span>
+</td>
+<td class="py-pad-lg px-pad-xl text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="min-h-[44px] px-pad-md rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md flex items-center gap-1 transition-colors" onclick="callSinglePatient('27', 'Ananya Iyer', 'Room 108')" type="button">
+<span class="material-symbols-outlined text-base">campaign</span>
+<span class="">Call</span>
+</button>
+<button class="min-h-[44px] px-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" onclick="showSummary('CLN1201', 'Ananya Iyer', 'Routine immunization booster and pediatric growth check.')" type="button">
+                  Summary
+                </button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="togglePriorityChange('27')" type="button">
+<span class="material-symbols-outlined text-lg">flag</span>
+</button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="removeOrPostpone('27')" type="button">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Rajeshwari Devi (Token 28) -->
+<tr class="hover:bg-surface-container-low/60 transition-colors" data-dept="General Medicine" data-doc="Dr. Amit Sharma" data-token="28">
+<td class="py-pad-lg px-pad-xl">
+<span class="font-headline-sm text-headline-sm font-bold text-primary">#28</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-body-bold text-body-bold text-on-surface">Rajeshwari Devi</span>
+<span class="font-caption text-caption text-on-surface-variant">68y F • #CLN1245</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface">General Medicine</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Dr. Amit Sharma</span>
+<span class="font-caption text-caption text-on-surface-variant">Wing A • Room 102</span>
+</div>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md">
+                Normal
+              </span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="font-body-md text-body-md text-on-surface font-semibold">Just added</span>
+</td>
+<td class="py-pad-lg px-pad-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Waiting
+              </span>
+</td>
+<td class="py-pad-lg px-pad-xl text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="min-h-[44px] px-pad-md rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md flex items-center gap-1 transition-colors" onclick="callSinglePatient('28', 'Rajeshwari Devi', 'Room 102')" type="button">
+<span class="material-symbols-outlined text-base">campaign</span>
+<span class="">Call</span>
+</button>
+<button class="min-h-[44px] px-pad-md rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" onclick="showSummary('CLN1245', 'Rajeshwari Devi', 'Type-2 diabetes follow up, HbA1c lab review from Central Pathology.')" type="button">
+                  Summary
+                </button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="togglePriorityChange('28')" type="button">
+<span class="material-symbols-outlined text-lg">flag</span>
+</button>
+<button class="min-h-[44px] w-11 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="removeOrPostpone('28')" type="button">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty Queue State Placeholder -->
+<div class="hidden p-pad-2xl flex flex-col items-center justify-center text-center" id="emptyQueueMessage">
+<div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant mb-pad-sm">
+<span class="material-symbols-outlined text-3xl">inbox</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface">No patients are currently waiting.</p>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-sm mt-1">There are no pending tickets matching your department and practitioner filter criteria.</p>
+</div>
+<!-- Table Footer / Pagination Metadata -->
+<div class="p-pad-md px-pad-xl bg-surface-container-low/40 flex items-center justify-between text-on-surface-variant font-caption text-caption">
+<span class="">Showing 5 of 24 active entries in general hospital intake</span>
+<div class="flex items-center gap-pad-sm">
+<span class="">Displaying Live WebSockets Stream</span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</div>
+</div>
+</section>
+<!-- SIDE DRAWER: ADD PATIENT TO QUEUE -->
+<div class="fixed inset-0 bg-on-surface/40 z-50 transition-opacity opacity-0 pointer-events-none duration-200" id="addPatientDrawerBackdrop">
+<div class="absolute top-0 right-0 bottom-0 w-full max-w-lg bg-surface-container-lowest shadow-xl flex flex-col justify-between translate-x-full transition-transform duration-300 ease-in-out" id="addPatientDrawer">
+<!-- Drawer Header -->
+<div class="p-pad-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-pad-sm">
+<div class="w-9 h-9 rounded-xl bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-xl font-bold">person_add</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">+ Add Patient to Queue</h3>
+<span class="font-caption text-caption text-on-surface-variant">Immediate OPD token allocation</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="closeAddPatientDrawer()" type="button">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+</div>
+<!-- Drawer Form Body -->
+<div class="p-pad-xl flex-1 overflow-y-auto flex flex-col gap-pad-lg">
+<!-- Clinova Intake Notice -->
+<div class="p-pad-md rounded-xl bg-surface-container-low text-on-surface flex items-start gap-pad-sm">
+<span class="material-symbols-outlined text-primary text-xl mt-0.5">hub</span>
+<p class="font-body-md text-body-md text-on-surface leading-snug">
+<span class="font-bold text-primary">Clinova Intake Linked:</span> Entering existing Patient ID auto-populates pre-consultation information.
+          </p>
+</div>
+<!-- Form fields -->
+<form class="flex flex-col gap-pad-lg" id="newPatientQueueForm" onsubmit="handleQueueSubmit(event)">
+<!-- Patient ID Lookup -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center justify-between" for="formPatientId">
+<span class="">Patient ID / MRN</span>
+<span class="font-caption text-caption text-primary">ABDM Verified</span>
+</label>
+<div class="relative">
+<input class="w-full min-h-[48px] px-pad-md bg-surface-container-low rounded-xl font-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest" id="formPatientId" required="" type="text" value="CLN1024 - Rahul Sharma">
+<button class="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-surface-container text-on-surface font-caption text-caption" type="button">Lookup</button>
+</div>
+</div>
+<!-- Patient Name -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface" for="formPatientName">Patient Full Name</label>
+<input class="w-full min-h-[48px] px-pad-md bg-surface-container-low rounded-xl font-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest" id="formPatientName" required="" type="text" value="Rahul Sharma">
+</div>
+<!-- Department -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface" for="formDepartment">Department</label>
+<div class="relative">
+<select class="w-full min-h-[48px] px-pad-md pr-10 bg-surface-container-low rounded-xl font-body-md text-on-surface focus:outline-none appearance-none cursor-pointer" id="formDepartment" onchange="updateDoctorsForDept(this.value)">
+<option value="General Medicine">General Medicine</option>
+<option value="Cardiology">Cardiology</option>
+<option value="Orthopedics">Orthopedics</option>
+<option value="Pediatrics">Pediatrics</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Assigned Doctor -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface" for="formDoctor">Assigned Doctor &amp; Room</label>
+<div class="relative">
+<select class="w-full min-h-[48px] px-pad-md pr-10 bg-surface-container-low rounded-xl font-body-md text-on-surface focus:outline-none appearance-none cursor-pointer" id="formDoctor">
+<option value="Dr. Amit Sharma - Wing A Room 102">Dr. Amit Sharma - Wing A Room 102</option>
+<option value="Dr. Neha Patil - Wing B Room 201">Dr. Neha Patil - Wing B Room 201</option>
+<option value="Dr. Rahul Joshi - Wing A Room 105">Dr. Rahul Joshi - Wing A Room 105</option>
+<option value="Dr. Priya Shah - Wing C Room 108">Dr. Priya Shah - Wing C Room 108</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Priority Level -->
+<div class="flex flex-col gap-pad-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg text-on-surface">Priority Level</span>
+<span class="font-caption text-caption text-on-surface-variant">Staff authorized decision only</span>
+</div>
+<div class="grid grid-cols-3 gap-pad-sm mt-1">
+<label class="cursor-pointer min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-surface-container-low has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface font-label-md text-label-md transition-colors px-2">
+<input checked="" class="hidden" name="priorityLevel" type="radio" value="Normal">
+<span class="">Normal</span>
+</label>
+<label class="cursor-pointer min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-surface-container-low has-[:checked]:bg-secondary-container has-[:checked]:text-on-secondary-container text-on-surface font-label-md text-label-md transition-colors px-2">
+<input class="hidden" name="priorityLevel" type="radio" value="Priority">
+<span class="">Priority</span>
+</label>
+<label class="cursor-pointer min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-surface-container-low has-[:checked]:bg-error has-[:checked]:text-on-error text-on-surface font-label-md text-label-md transition-colors px-2">
+<input class="hidden" name="priorityLevel" type="radio" value="Urgent">
+<span class="">Urgent</span>
+</label>
+</div>
+</div>
+<!-- Reason for Visit -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface" for="formReason">Reason for Visit</label>
+<textarea class="w-full p-pad-md bg-surface-container-low rounded-xl font-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest resize-none" id="formReason" rows="3">Follow-up on seasonal respiratory symptoms and prescription renewal</textarea>
+</div>
+<button class="hidden" id="submitPatientBtn" type="submit">Submit</button>
+</form>
+</div>
+<!-- Drawer Action Footer -->
+<div class="p-pad-xl bg-surface-container-low flex items-center gap-pad-md">
+<button class="flex-1 min-h-[48px] px-pad-xl rounded-xl bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm transition-colors" onclick="document.getElementById('submitPatientBtn').click()" type="button">
+<span class="material-symbols-outlined text-xl">add</span>
+<span class="">Add to Queue</span>
+</button>
+<button class="min-h-[48px] px-pad-xl rounded-xl bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-lg text-label-lg transition-colors" onclick="closeAddPatientDrawer()" type="button">
+          Cancel
+        </button>
+</div>
+</div>
+</div>
+<!-- PATIENT SUMMARY DIALOG (LIGHTWEIGHT MODAL) -->
+<dialog class="p-0 rounded-xl bg-surface-container-lowest text-on-surface shadow-xl max-w-md w-full backdrop:bg-on-surface/40" id="summaryModal">
+<div class="p-pad-xl flex flex-col gap-pad-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-pad-sm">
+<span class="material-symbols-outlined text-primary text-2xl">clinical_notes</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Pre-Consult Summary</h4>
+</div>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-low text-on-surface-variant flex items-center justify-center" onclick="document.getElementById('summaryModal').close()" type="button">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-pad-xs bg-surface-container-low p-pad-md rounded-xl">
+<span class="font-label-lg text-label-lg text-on-surface" id="summaryPatientName">Patient</span>
+<span class="font-caption text-caption text-on-surface-variant" id="summaryMrn">MRN</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Reported Symptoms &amp; Notes</span>
+<p class="font-body-md text-body-md text-on-surface" id="summaryNotes">Notes content</p>
+</div>
+<div class="pt-pad-sm flex justify-end">
+<button class="min-h-[44px] px-pad-lg rounded-xl bg-primary text-on-primary font-label-lg text-label-lg" onclick="document.getElementById('summaryModal').close()" type="button">
+          Close Window
+        </button>
+</div>
+</div>
+</dialog>
+</div>
+<script>
+  let chimeActive = true;
+  let currentFilterDept = 'all';
+  let currentFilterDoc = 'all';
+  let currentSearchQuery = '';
+
+  function toggleAudioChime() {
+    chimeActive = !chimeActive;
+    const icon = document.getElementById('audioChimeIcon');
+    const text = document.getElementById('audioChimeText');
+    if (chimeActive) {
+      icon.textContent = 'volume_up';
+      icon.className = 'material-symbols-outlined text-primary text-xl';
+      text.textContent = 'Audio Chime: Active';
+    } else {
+      icon.textContent = 'volume_off';
+      icon.className = 'material-symbols-outlined text-outline text-xl';
+      text.textContent = 'Audio Chime: Muted';
+    }
+  }
+
+  function triggerQuickBroadcast() {
+    alert("Audio broadcast triggered over Hospital PA System:\n'Attention please, Token 24, proceed to General Medicine Room 102.'");
+  }
+
+  function openAddPatientDrawer() {
+    const backdrop = document.getElementById('addPatientDrawerBackdrop');
+    const drawer = document.getElementById('addPatientDrawer');
+    backdrop.classList.remove('opacity-0', 'pointer-events-none');
+    drawer.classList.remove('translate-x-full');
+  }
+
+  function closeAddPatientDrawer() {
+    const backdrop = document.getElementById('addPatientDrawerBackdrop');
+    const drawer = document.getElementById('addPatientDrawer');
+    drawer.classList.add('translate-x-full');
+    backdrop.classList.add('opacity-0', 'pointer-events-none');
+  }
+
+  function confirmCallNext(token, name, room) {
+    alert("Dispatching announcement for Token #" + token + " (" + name + "). Room: " + room);
+  }
+
+  function reannounceChime(token) {
+    alert("Re-chiming Token #" + token + " to Central Waiting Screen and Mobile SMS notification.");
+  }
+
+  function postponeToken(token) {
+    if (confirm("Move Token #" + token + " down 3 slots in the priority queue?")) {
+      alert("Token #" + token + " postponed successfully.");
+    }
+  }
+
+  function callSinglePatient(token, name, room) {
+    alert("Calling Token #" + token + " (" + name + ") to " + room);
+  }
+
+  function showSummary(mrn, name, notes) {
+    document.getElementById('summaryMrn').textContent = "ID: " + mrn;
+    document.getElementById('summaryPatientName').textContent = name;
+    document.getElementById('summaryNotes').textContent = notes;
+    document.getElementById('summaryModal').showModal();
+  }
+
+  function togglePriorityChange(token) {
+    const newPriority = prompt("Authorized staff: Update priority level for Token #" + token + " (Normal, Priority, Urgent):", "Priority");
+    if (newPriority) {
+      alert("Token #" + token + " status updated to " + newPriority + " in Hospital HIS.");
+    }
+  }
+
+  function removeOrPostpone(token) {
+    alert("Ticket Options for Token #" + token + ":\n- Postpone by 15 mins\n- Transfer to Lab / Diagnostics\n- Mark Patient No-Show\n- Cancel Entry");
+  }
+
+  function filterDept(btn, dept) {
+    currentFilterDept = dept;
+    const buttons = document.querySelectorAll('.dept-tab');
+    buttons.forEach(b => {
+      b.className = 'dept-tab min-h-[44px] px-pad-lg rounded-xl text-on-surface-variant hover:bg-surface-container-low font-label-lg text-label-lg transition-colors whitespace-nowrap';
+    });
+    btn.className = 'dept-tab min-h-[44px] px-pad-lg rounded-xl bg-primary text-on-primary font-label-lg text-label-lg transition-colors whitespace-nowrap';
+    applyFilters();
+  }
+
+  function filterDoctor(docVal) {
+    currentFilterDoc = docVal;
+    applyFilters();
+  }
+
+  function handleTableSearch(val) {
+    currentSearchQuery = val.trim().toLowerCase();
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const rows = document.querySelectorAll('#queueTableBody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowDept = row.getAttribute('data-dept') || '';
+      const rowDoc = row.getAttribute('data-doc') || '';
+      const textContent = row.textContent.toLowerCase();
+
+      const matchesDept = (currentFilterDept === 'all' || rowDept.toLowerCase() === currentFilterDept.toLowerCase());
+      const matchesDoc = (currentFilterDoc === 'all' || rowDoc.toLowerCase().includes(currentFilterDoc.toLowerCase()));
+      const matchesSearch = (!currentSearchQuery || textContent.includes(currentSearchQuery));
+
+      if (matchesDept && matchesDoc && matchesSearch) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    const emptyMsg = document.getElementById('emptyQueueMessage');
+    const countBadge = document.getElementById('activeRosterCount');
+    
+    if (visibleCount === 0) {
+      emptyMsg.classList.remove('hidden');
+    } else {
+      emptyMsg.classList.add('hidden');
+    }
+
+    countBadge.textContent = visibleCount + " Waiting";
+  }
+
+  function handleQueueSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('formPatientName').value;
+    const dept = document.getElementById('formDepartment').value;
+    const doc = document.getElementById('formDoctor').value;
+    alert("New Token Generated: #29 for " + name + " assigned to " + dept + " (" + doc + "). Added to roster.");
+    closeAddPatientDrawer();
+  }
+
+  function updateDoctorsForDept(dept) {
+    const docSelect = document.getElementById('formDoctor');
+    if (dept === 'Cardiology') {
+      docSelect.value = 'Dr. Neha Patil - Wing B Room 201';
+    } else if (dept === 'Orthopedics') {
+      docSelect.value = 'Dr. Rahul Joshi - Wing A Room 105';
+    } else if (dept === 'Pediatrics') {
+      docSelect.value = 'Dr. Priya Shah - Wing C Room 108';
+    } else {
+      docSelect.value = 'Dr. Amit Sharma - Wing A Room 102';
+    }
+  }
+
+  function refreshQueue() {
+    const countBadge = document.getElementById('activeRosterCount');
+    countBadge.textContent = 'Refreshing...';
+    setTimeout(() => {
+      applyFilters();
+    }, 400);
+  }
+</script></main></div>
+
+</body></html>

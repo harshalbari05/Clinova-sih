@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     clinical_history,
     consultations,
     health,
+    hospitals,
     medical_documents,
     patients,
     summary,
@@ -14,6 +15,9 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
+
+# Public Hospital Directory endpoints
+api_router.include_router(hospitals.router, prefix="/hospitals", tags=["Hospitals"])
 
 # Authentication endpoints
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])

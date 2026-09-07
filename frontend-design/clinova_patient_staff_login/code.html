@@ -1,0 +1,260 @@
+<!DOCTYPE html><html lang="en" style="min-height: 100%; height: auto; opacity: 1; background-color: rgb(248, 250, 252);"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>CLINOVA Healthcare - Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            teal: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a'
+            }
+          },
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    .pb-safe {
+      padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    }
+    .pt-safe {
+      padding-top: max(1rem, env(safe-area-inset-top, 0px));
+    }
+    input:focus {
+      outline: none !important;
+      box-shadow: 0 0 0 2px #0d9488 !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col justify-between pt-safe pb-safe">
+<!-- Main Container -->
+<main class="w-full max-w-[420px] mx-auto px-5 py-6 flex-1 flex flex-col justify-start">
+<!-- Header Branding -->
+<header class="flex flex-col items-center text-center mb-6 w-full">
+<div class="w-24 h-24 rounded-2xl bg-white p-2 shadow-sm border border-slate-100 mb-3 flex items-center justify-center overflow-hidden mx-auto"><img alt="CLINOVA Logo" class="w-16 h-16 object-contain block mx-auto" src="https://lh3.googleusercontent.com/aida/AEtjO1UB5W5BF8E0f1aYfuRxOKVf9ojLxf7WbtWS46o8WAMn0sCDDAt-XUa_vf5BkYqnd0vWVSGuWn6Kl32MK6PLY0ojU6oeKNOq3DYehKOHWpR3W4CerGuGPThuftqDNMRaqSjrgeiWO-UBpU3SywooTwkA13HIpZdxqFH8bAB4HTtnkGft8wp8k5o49TW8CRSaZQywz23Ym-1uQQHXG-tFfRlsswmo9bJQIZ00JkzEudfonjrA_Mx6leVN05on"></div>
+<h1 class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-1">
+        CLINOVA
+      </h1>
+<p class="text-[13px] text-slate-500 font-medium mt-0.5">
+        Smarter healthcare, simpler care.
+      </p>
+</header>
+<!-- Sign-in Card Form -->
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-5">
+<!-- Role Selector -->
+<div class="flex flex-col gap-2">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-500">I am a:</span>
+<div aria-label="Select User Role" class="grid grid-cols-2 gap-2.5" role="radiogroup">
+<!-- Patient Option -->
+<button class="flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-800 font-bold text-sm transition-all duration-150 shadow-sm" id="role-patient" onclick="selectRole('patient')" type="button">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: &quot;FILL&quot; 1;">person</span>
+<span class="">Patient</span>
+</button>
+<!-- Hospital Admin Option -->
+<button class="flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-medium text-sm hover:bg-slate-50 transition-all duration-150" id="role-admin" onclick="selectRole('admin')" type="button">
+<span class="material-symbols-outlined text-lg">local_hospital</span>
+<span class="">Hospital Admin</span>
+</button>
+</div>
+</div>
+<!-- ================= PATIENT SECTION ================= -->
+<div class="flex flex-col gap-4" id="patient-panel">
+<!-- Sign in Methods Tabs -->
+<div class="flex flex-col gap-2">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-500">Sign in with:</span>
+<div class="grid grid-cols-3 bg-slate-100 p-1 rounded-xl gap-1 text-xs font-semibold" role="tablist">
+<button class="py-2 px-1 rounded-lg text-teal-800 bg-white shadow-xs flex items-center justify-center gap-1 transition-all" id="tab-mobile" onclick="setPatientTab('mobile')" type="button">
+<span class="material-symbols-outlined text-[15px]">smartphone</span>
+<span class="">Mobile</span>
+</button>
+<button class="py-2 px-1 rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1 transition-all" id="tab-abha" onclick="setPatientTab('abha')" type="button">
+<span class="material-symbols-outlined text-[15px]">fingerprint</span>
+<span class="">ABHA ID</span>
+</button>
+<button class="py-2 px-1 rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1 transition-all" id="tab-email" onclick="setPatientTab('email')" type="button">
+<span class="material-symbols-outlined text-[15px]">mail</span>
+<span class="">Email</span>
+</button>
+</div>
+</div>
+<!-- Tab 1: Mobile Input Mode -->
+<div class="flex flex-col gap-3" id="method-mobile">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-700" for="mobile-phone">Mobile Number</label>
+<div class="relative flex items-center rounded-xl border border-slate-300 bg-slate-50 focus-within:bg-white focus-within:border-teal-600 transition-colors overflow-hidden">
+<div class="flex items-center gap-1 px-3 py-3 border-r border-slate-200 text-slate-700 font-semibold text-sm select-none"><span class="">+91</span></div>
+<input class="w-full py-3 px-3 bg-transparent text-slate-900 text-sm font-medium border-0 focus:ring-0 placeholder:text-slate-400" id="mobile-phone" inputmode="numeric" maxlength="10" placeholder="e.g. 98765 43210" type="tel">
+</div>
+<p class="text-[12px] text-slate-500 leading-snug flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-teal-600">info</span>
+              You will receive a 6-digit OTP on your registered mobile number.
+            </p>
+</div>
+<button class="w-full min-h-[50px] bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition" type="button">
+<span class="">Get OTP</span>
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+<!-- Tab 2: ABHA ID Mode -->
+<div class="hidden flex flex-col gap-3" id="method-abha">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="text-xs font-bold text-slate-700" for="abha-id">ABHA Number / Address</label>
+<span class="inline-flex items-center gap-0.5 text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+<span class="material-symbols-outlined text-[12px]">verified</span> ABDM
+              </span>
+</div>
+<input class="w-full py-3 px-3 rounded-xl border border-slate-300 text-slate-900 text-sm font-medium focus:border-teal-600 placeholder:text-slate-400" id="abha-id" placeholder="14-digit ABHA or username@abdm" type="text">
+<p class="text-[12px] text-slate-500 leading-snug flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-teal-600">lock</span>
+              OTP will be sent to the Aadhaar-linked mobile number.
+            </p>
+</div>
+<button class="w-full min-h-[50px] bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition" type="button">
+<span class="">Verify with OTP</span>
+<span class="material-symbols-outlined text-lg">verified_user</span>
+</button>
+<div class="text-center pt-1">
+<a class="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline" href="#create-abha">
+              Don't have an ABHA ID? Create ABHA Card →
+            </a>
+</div>
+</div>
+<!-- Tab 3: Email Mode -->
+<div class="hidden flex flex-col gap-3" id="method-email">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-700" for="patient-email">Email Address</label>
+<input class="w-full py-3 px-3 rounded-xl border border-slate-300 text-slate-900 text-sm font-medium focus:border-teal-600 placeholder:text-slate-400" id="patient-email" placeholder="patient@example.com" type="email">
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="text-xs font-bold text-slate-700" for="patient-pwd">Password</label>
+<a class="text-xs font-semibold text-teal-700 hover:underline" href="#forgot">Forgot?</a>
+</div>
+<div class="relative flex items-center">
+<input class="w-full py-3 pl-3 pr-10 rounded-xl border border-slate-300 text-slate-900 text-sm font-medium focus:border-teal-600 placeholder:text-slate-400" id="patient-pwd" placeholder="Enter password" type="password">
+<button class="absolute right-0 top-0 bottom-0 px-3 text-slate-400 hover:text-slate-600 flex items-center justify-center" onclick="togglePassword('patient-pwd', 'patient-pwd-icon')" type="button">
+<span class="material-symbols-outlined text-[18px]" id="patient-pwd-icon">visibility</span>
+</button>
+</div>
+</div>
+<button class="w-full min-h-[50px] bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition" type="button">
+<span class="">Sign In</span>
+<span class="material-symbols-outlined text-lg">login</span>
+</button>
+</div>
+</div>
+<!-- ================= HOSPITAL ADMIN SECTION ================= -->
+<div class="hidden flex flex-col gap-3.5" id="admin-panel">
+<div class="bg-amber-50 border border-amber-200/80 rounded-xl p-2.5 flex items-start gap-2">
+<span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0 mt-0.5">shield</span>
+<p class="text-[12px] text-amber-800 leading-snug">
+            Authorized hospital personnel, doctors, and staff login portal.
+          </p>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-700" for="admin-id">Hospital Employee ID / Work Email</label>
+<input class="w-full py-3 px-3 rounded-xl border border-slate-300 text-slate-900 text-sm font-medium focus:border-teal-600 placeholder:text-slate-400" id="admin-id" placeholder="e.g. DOC-9428 or staff@hospital.org" type="text">
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="text-xs font-bold text-slate-700" for="admin-pwd">Password</label>
+<a class="text-xs font-semibold text-teal-700 hover:underline" href="#forgot">Reset Password</a>
+</div>
+<div class="relative flex items-center">
+<input class="w-full py-3 pl-3 pr-10 rounded-xl border border-slate-300 text-slate-900 text-sm font-medium focus:border-teal-600 placeholder:text-slate-400" id="admin-pwd" placeholder="Enter secure password" type="password">
+<button class="absolute right-0 top-0 bottom-0 px-3 text-slate-400 hover:text-slate-600 flex items-center justify-center" onclick="togglePassword('admin-pwd', 'admin-pwd-icon')" type="button">
+<span class="material-symbols-outlined text-[18px]" id="admin-pwd-icon">visibility</span>
+</button>
+</div>
+</div>
+<button class="w-full min-h-[50px] bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition" type="button">
+<span class="material-symbols-outlined text-lg">admin_panel_settings</span>
+<span class="">Sign In as Admin</span>
+</button>
+</div>
+<!-- Sub-links: Help & Register -->
+
+<div class="pt-2 border-t border-slate-100 flex flex-col items-center gap-2 text-center text-xs text-slate-500"><p class="">New to Clinova? <a href="#register" class="font-bold text-teal-700 hover:text-teal-900 hover:underline">Create Patient Account</a></p><a href="#help" class="font-medium text-slate-500 hover:text-slate-700 hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">help_outline</span>Need help logging in? Contact Hospital Desk</a></div></div>
+<!-- Trust & Compliance Footer -->
+
+</main>
+<!-- Interactive State Switching Logic -->
+<script>
+    function selectRole(role) {
+      const patientBtn = document.getElementById('role-patient');
+      const adminBtn = document.getElementById('role-admin');
+      const patientPanel = document.getElementById('patient-panel');
+      const adminPanel = document.getElementById('admin-panel');
+
+      if (role === 'patient') {
+        patientBtn.className = 'flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-800 font-bold text-sm transition-all duration-150 shadow-sm';
+        adminBtn.className = 'flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-medium text-sm hover:bg-slate-50 transition-all duration-150';
+        patientPanel.classList.remove('hidden');
+        adminPanel.classList.add('hidden');
+      } else {
+        adminBtn.className = 'flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-800 font-bold text-sm transition-all duration-150 shadow-sm';
+        patientBtn.className = 'flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-medium text-sm hover:bg-slate-50 transition-all duration-150';
+        patientPanel.classList.add('hidden');
+        adminPanel.classList.remove('hidden');
+      }
+    }
+
+    function setPatientTab(tabName) {
+      const tabs = ['mobile', 'abha', 'email'];
+      tabs.forEach(t => {
+        const tabBtn = document.getElementById('tab-' + t);
+        const methodPanel = document.getElementById('method-' + t);
+        if (t === tabName) {
+          tabBtn.className = 'py-2 px-1 rounded-lg text-teal-800 bg-white shadow-xs flex items-center justify-center gap-1 transition-all font-bold';
+          methodPanel.classList.remove('hidden');
+        } else {
+          tabBtn.className = 'py-2 px-1 rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1 transition-all';
+          methodPanel.classList.add('hidden');
+        }
+      });
+    }
+
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    }
+  </script>
+
+
+
+
+
+
+</body></html>
