@@ -571,3 +571,101 @@ async def test_get_after_update_reflects_changes(
     data = get_res.json()
     assert data["chief_complaint"] == "Revised complaint"
     assert data["drug_history"] == "Metformin 500mg BD"
+
+
+# ---------------------------------------------------------------------------
+# Hospital Staff Authorization: Read access scoped to affiliated facility
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_hospital_doctor_can_read_history(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """A hospital doctor can retrieve clinical history for a consultation at their hospital."""
+    # 1. Register hospital with admin/staff
+    h_reg = await client.post(
+        "/api/v1/auth/hospital/register",
+        json={
+            "hospital_name": "City General Hospital",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "registration_number": "REG-CGH-101",
+            "admin_email": "doc.clinical@citygen.org",
+            "admin_password": "HospitalPassword1!",
+            "admin_name": "Dr. Amit Sharma",
+        },
+    )
+    assert h_reg.status_code == 201, h_reg.text
+    h_data = h_reg.json()
+    hospital_id = uuid.UUID(h_data["hospital"]["id"])
+
+    # 2. Login doctor
+    doc_login = await client.post(
+        "/api/v1/auth/hospital/login",
+        json={"identifier": "doc.clinical@citygen.org", "password": "HospitalPassword1!"},
+    )
+    assert doc_login.status_code == 200
+    doc_token = doc_login.json()["access_token"]
+
+    # 3. Patient registers and creates consultation at this hospital
+    patient_token = await _register_and_login(
+        client, email="patient.citygen@example.com"
+    )
+    c_res = await client.post(
+        CONSULTATIONS_URL,
+        json={"hospital_id": str(hospital_id), "chief_complaint": "Persistent fever"},
+        headers={"Authorization": f"Bearer {patient_token}"},
+    )
+    assert c_res.status_code == 201
+    cid = c_res.json()["id"]
+
+    # 4. Patient enters clinical history
+    await client.post(
+        history_url(cid),
+        json={
+            "chief_complaint": "Persistent fever 102F",
+            "history_of_present_illness": "3 days of high fever",
+            "past_medical_history": "Asthma",
+            "allergy_history": "Penicillin",
+        },
+        headers={"Authorization": f"Bearer {patient_token}"},
+    )
+
+    # 5. Doctor retrieves history -> 200 OK
+    doc_get = await client.get(
+        history_url(cid),
+        headers={"Authorization": f"Bearer {doc_token}"},
+    )
+    assert doc_get.status_code == 200
+    doc_hist = doc_get.json()
+    assert doc_hist["chief_complaint"] == "Persistent fever 102F"
+    assert doc_hist["past_medical_history"] == "Asthma"
+    assert doc_hist["allergy_history"] == "Penicillin"
+
+    # 6. Doctor from another hospital cannot access this consultation -> 404
+    h2_reg = await client.post(
+        "/api/v1/auth/hospital/register",
+        json={
+            "hospital_name": "Other Hospital",
+            "city": "Pune",
+            "state": "Maharashtra",
+            "registration_number": "REG-OTH-202",
+            "admin_email": "doc.other@otherhosp.org",
+            "admin_password": "HospitalPassword1!",
+            "admin_name": "Dr. Other",
+        },
+    )
+    assert h2_reg.status_code == 201
+    other_login = await client.post(
+        "/api/v1/auth/hospital/login",
+        json={"identifier": "doc.other@otherhosp.org", "password": "HospitalPassword1!"},
+    )
+    other_token = other_login.json()["access_token"]
+
+    other_get = await client.get(
+        history_url(cid),
+        headers={"Authorization": f"Bearer {other_token}"},
+    )
+    assert other_get.status_code == 404
+

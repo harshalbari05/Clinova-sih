@@ -25,7 +25,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.clinical_history import ClinicalHistory
 from app.models.consultation import Consultation
+from app.models.hospital_user import HospitalUser
 from app.models.patient import Patient
+from app.models.user import User
 from app.schemas.clinical_history import (
     ClinicalHistoryCreate,
     ClinicalHistoryResponse,
@@ -91,26 +93,74 @@ async def _get_history_for_consultation(
 # ---------------------------------------------------------------------------
 
 
+async def _authorize_consultation_read(
+    db: AsyncSession,
+    user: User,
+    consultation_id: uuid.UUID,
+) -> Consultation:
+    """Retrieve consultation if authorized for reading clinical history.
+
+    Rules:
+    - Patient must own the consultation.
+    - Hospital staff must belong to the facility holding the consultation.
+    - Cross-patient or cross-hospital access returns safe 404.
+    """
+    stmt = select(Consultation).where(Consultation.id == consultation_id)
+    consultation = (await db.execute(stmt)).scalar_one_or_none()
+
+    if consultation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Consultation not found.",
+        )
+
+    # Check Patient ownership
+    p_stmt = select(Patient).where(Patient.user_id == user.id)
+    patient = (await db.execute(p_stmt)).scalar_one_or_none()
+    if patient is not None:
+        if consultation.patient_id != patient.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Consultation not found.",
+            )
+        return consultation
+
+    # Check Hospital staff ownership
+    h_stmt = select(HospitalUser).where(HospitalUser.user_id == user.id)
+    h_user = (await db.execute(h_stmt)).scalar_one_or_none()
+    if h_user is not None:
+        if consultation.hospital_id != h_user.hospital_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Consultation not found.",
+            )
+        return consultation
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Consultation not found.",
+    )
+
+
 async def get_clinical_history(
     db: AsyncSession,
-    patient: Patient,
+    user: User,
     consultation_id: uuid.UUID,
 ) -> ClinicalHistoryResponse:
-    """Return the clinical history for a patient-owned consultation.
+    """Return the clinical history for an authorized patient or hospital staff member.
 
     Args:
         db: Active async database session.
-        patient: Authenticated patient ORM object.
+        user: Authenticated user (patient or hospital staff).
         consultation_id: UUID of the target consultation.
 
     Returns:
         ClinicalHistoryResponse if the record exists.
 
     Raises:
-        HTTPException 404: Consultation not found / not owned, or no history exists.
+        HTTPException 404: Consultation not found / unauthorized, or no history exists.
     """
-    # Verify ownership first
-    consultation = await _get_owned_consultation(db, patient, consultation_id)
+    consultation = await _authorize_consultation_read(db, user, consultation_id)
 
     history = await _get_history_for_consultation(db, consultation.id)
     if history is None:

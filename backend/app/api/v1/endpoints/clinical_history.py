@@ -20,7 +20,7 @@ import uuid
 
 from fastapi import APIRouter, status
 
-from app.api.deps import CurrentPatientDep, DatabaseDep
+from app.api.deps import CurrentPatientDep, CurrentUserDep, DatabaseDep
 from app.schemas.clinical_history import (
     ClinicalHistoryCreate,
     ClinicalHistoryResponse,
@@ -64,20 +64,19 @@ async def create_clinical_history(
     summary="Get Clinical History",
     description=(
         "Returns the clinical history for the specified consultation. "
-        "The consultation must belong to the authenticated patient. "
+        "Accessible by the owning patient or authorized hospital staff at the affiliated facility. "
         "Returns HTTP 404 if no clinical history exists yet, or if the "
-        "consultation does not belong to the authenticated patient."
+        "consultation is not accessible to the caller."
     ),
 )
 async def get_clinical_history(
     consultation_id: uuid.UUID,
-    current_patient: CurrentPatientDep,
+    user: CurrentUserDep,
     db: DatabaseDep,
 ) -> ClinicalHistoryResponse:
-    """Get the clinical history for the authenticated patient's consultation."""
-    _user, patient = current_patient
+    """Get the clinical history for the consultation (patient or hospital facility)."""
     return await clinical_history_service.get_clinical_history(
-        db, patient, consultation_id
+        db, user, consultation_id
     )
 
 

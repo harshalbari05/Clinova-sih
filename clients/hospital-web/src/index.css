@@ -61,36 +61,6 @@
   box-shadow: 0 4px 20px rgba(19, 27, 46, 0.08);
 }
 
-@keyframes pulseRing {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-}
-
-@keyframes pulseRecord {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
-  }
-}
-
-.mic-recording {
-  animation: pulseRecord 1.5s infinite;
-}
-
 /* Material symbols outlined font icon styling */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
