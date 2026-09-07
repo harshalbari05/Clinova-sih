@@ -208,4 +208,70 @@ describe('Patient Portal Component Tests', () => {
       });
     });
   });
+
+  it('renders SummaryPage with clinical summary and submits with live consultation reference ID', async () => {
+    localStorage.setItem('clinova_patient_token', 'mock-token');
+    localStorage.setItem('clinova_patient_data', JSON.stringify(mockPatient));
+    localStorage.setItem('clinova_active_consultation', JSON.stringify(mockConsultation));
+
+    const mockSummaryData = {
+      id: 'sum-101',
+      consultation_id: 'con-101',
+      patient_id: 'pat-1',
+      status: 'draft',
+      chief_complaint: 'Cough and shortness of breath',
+      provisional_diagnosis: 'Acute Bronchitis',
+      summary_text: 'Patient reports 4 days of dry cough and low grade fever.',
+      differential_diagnoses: [],
+      red_flags: [],
+      recommendations: [],
+      structured_summary: {
+        chief_complaint: 'Cough and shortness of breath',
+        patient_reported_symptoms: [],
+        past_medical_history: [],
+        current_medications: [],
+        allergies: [],
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    (api.summaryApi.getSummary as any).mockResolvedValue(mockSummaryData);
+    (api.documentApi.listDocuments as any).mockResolvedValue({ items: [], total: 0 });
+
+    const SummaryPageMod = (await import('../pages/SummaryPage')).default;
+
+    render(
+      <MemoryRouter>
+        <PatientProvider>
+          <SummaryPageMod />
+        </PatientProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Review Your Information/i)).toBeInTheDocument();
+      expect(screen.getByText(/Patient reports 4 days of dry cough and low grade fever./i)).toBeInTheDocument();
+    });
+
+    // Acknowledge review checkbox
+    const confirmCheckbox = screen.getByRole('checkbox');
+    fireEvent.click(confirmCheckbox);
+
+    // Wait for state update so button is enabled
+    const submitBtn = screen.getByRole('button', { name: /Submit to Doctor Queue/i });
+    await waitFor(() => {
+      expect(submitBtn).not.toBeDisabled();
+    });
+    fireEvent.click(submitBtn);
+
+    // Verify modal overlay opens with live consultation reference ID
+    await waitFor(() => {
+      expect(screen.getByText(/Submitted Successfully!/i)).toBeInTheDocument();
+      expect(screen.getByText(/Consultation Case Reference/i)).toBeInTheDocument();
+      const refElements = screen.getAllByText(/CON-101/i);
+      expect(refElements.length).toBeGreaterThanOrEqual(2);
+      expect(screen.queryByText('#24')).not.toBeInTheDocument();
+    });
+  });
 });

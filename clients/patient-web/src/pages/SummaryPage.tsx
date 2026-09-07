@@ -445,20 +445,21 @@ export const SummaryPage: React.FC = () => {
                 Submitted Successfully!
               </h3>
               <p className="font-body-md text-xs text-on-surface-variant">
-                Your medical history and clinical summary are now ready on Dr. Sharma's workspace.
+                Your medical history and pre-intake summary have been submitted to the {activeHospital?.name || 'hospital'} OPD registry for attending physician review.
               </p>
             </div>
 
-            {/* Token Card */}
+            {/* Consultation Reference Card */}
             <div className="w-full p-4 rounded-2xl bg-surface-container-low border border-primary/20 flex flex-col gap-1">
               <span className="font-caption text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">
-                Your OPD Token Number
+                Consultation Case Reference
               </span>
-              <span className="font-headline-lg text-3xl font-extrabold text-primary">
-                #24
+              <span className="font-mono text-2xl font-black text-primary tracking-wide">
+                #{currentConsultation?.id.slice(0, 8).toUpperCase() || 'REGISTERED'}
               </span>
-              <span className="text-[11px] text-secondary font-bold">
-                Estimated wait: ~15 mins
+              <span className="text-[11px] text-secondary font-bold flex items-center justify-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                <span>Queued for Clinician Review</span>
               </span>
             </div>
 
