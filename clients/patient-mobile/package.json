@@ -1,0 +1,40 @@
+{
+  "name": "clinova-patient-mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "expo": "~57.0.20",
+    "expo-av": "~16.0.8",
+    "expo-camera": "~57.0.4",
+    "expo-image-picker": "~57.0.16",
+    "expo-secure-store": "~57.0.3",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3",
+    "vitest": "^3.0.5"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "expo-av"
+        ]
+      }
+    }
+  },
+  "private": true
+}

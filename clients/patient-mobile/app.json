@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Clinova Patient",
+    "slug": "clinova-patient-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.clinova.patient",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow Clinova to scan physical prescriptions and lab reports.",
+        "NSMicrophoneUsageDescription": "Allow Clinova to record speech for AI medical intake.",
+        "NSPhotoLibraryUsageDescription": "Allow Clinova to select medical reports and prescriptions."
+      }
+    },
+    "android": {
+      "package": "com.clinova.patient",
+      "adaptiveIcon": {
+        "backgroundColor": "#00685F",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Clinova to scan physical prescriptions and lab reports."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Clinova to select medical reports and prescriptions."
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}
