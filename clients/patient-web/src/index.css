@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #00685f;
+    --color-primary-container: #008378;
+    --color-on-primary: #ffffff;
+    --color-secondary: #006a63;
+    --color-secondary-container: #99efe5;
+    --color-on-secondary-container: #006f67;
+    --color-tertiary: #006194;
+    --color-surface: #faf8ff;
+    --color-on-surface: #131b2e;
+    --color-on-surface-variant: #3d4947;
+    --color-surface-container: #eaedff;
+    --color-surface-container-low: #f2f3ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-error: #ba1a1a;
+    --color-error-container: #ffdad6;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #faf8ff;
+    color: #131b2e;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: #00685f !important;
+    box-shadow: 0 0 0 2px rgba(0, 104, 95, 0.2) !important;
+  }
+}
+
+.pb-safe {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+}
+
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 231, 255, 0.8);
+  box-shadow: 0 2px 12px rgba(19, 27, 46, 0.05);
+}
+
+.card-elevated {
+  background-color: #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(218, 226, 253, 0.7);
+  box-shadow: 0 4px 20px rgba(19, 27, 46, 0.08);
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulseRecord {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
+  }
+}
+
+.mic-recording {
+  animation: pulseRecord 1.5s infinite;
+}
+
+/* Material symbols outlined font icon styling */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
