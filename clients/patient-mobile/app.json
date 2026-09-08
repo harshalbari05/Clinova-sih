@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Clinova Patient",
+    "slug": "clinova-patient-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#00685F"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.clinova.patient",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Clinova needs access to your camera to scan and capture prescriptions, lab reports, and medical documents.",
+        "NSPhotoLibraryUsageDescription": "Clinova needs access to your photos to upload medical documents and test reports.",
+        "NSMicrophoneUsageDescription": "Clinova needs access to your microphone to enable voice responses during clinical intake interviews."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#00685F"
+      },
+      "package": "com.clinova.patient",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your photos to upload medical documents.",
+          "cameraPermission": "The app needs access to your camera to capture medical documents."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "The app needs access to your microphone to allow voice intake answers."
+        }
+      ]
+    ]
+  }
+}
