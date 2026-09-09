@@ -25,6 +25,7 @@ export const InterviewPage: React.FC = () => {
     patient,
     activeConsultation,
     activeSession,
+    setActiveSession,
     language,
     triageAlert,
     setTriageAlert,
@@ -34,6 +35,7 @@ export const InterviewPage: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [currentStepLabel, setCurrentStepLabel] = useState<string>('Clinical Intake');
   const [currentOptions, setCurrentOptions] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -50,7 +52,7 @@ export const InterviewPage: React.FC = () => {
 
   // Scroll to bottom whenever messages update
   const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -62,14 +64,24 @@ export const InterviewPage: React.FC = () => {
     async function loadHistory() {
       if (!activeSession) return;
       try {
-        const res = await aiApi.listMessages(activeSession.id);
+        const [res, sessionData] = await Promise.all([
+          aiApi.listMessages(activeSession.id),
+          aiApi.getSession(activeSession.id).catch(() => null),
+        ]);
+
+        if (sessionData && sessionData.status === 'completed') {
+          setIsComplete(true);
+        }
+
         if (res.items && res.items.length > 0) {
           setMessages(res.items);
           const lastMsg = res.items[res.items.length - 1];
           if (lastMsg.role !== 'patient') {
             if (lastMsg.options) setCurrentOptions(lastMsg.options);
             if (lastMsg.current_step_label) setCurrentStepLabel(lastMsg.current_step_label);
-            if (lastMsg.is_complete) setIsComplete(true);
+            if (lastMsg.is_complete || (sessionData && sessionData.status === 'completed')) {
+              setIsComplete(true);
+            }
           }
         }
       } catch (err) {
@@ -78,6 +90,29 @@ export const InterviewPage: React.FC = () => {
     }
     loadHistory();
   }, [activeSession]);
+
+  // Complete session and continue to next intake step (/upload)
+  const handleContinueToNextStep = async () => {
+    if (isCompleting) return;
+    if (!activeSession) {
+      navigate('/upload');
+      return;
+    }
+
+    setIsCompleting(true);
+    setError('');
+
+    try {
+      const completedSession = await aiApi.completeSession(activeSession.id);
+      setActiveSession(completedSession);
+      navigate('/upload');
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Failed to complete interview session. Please try again.';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   // Send message handler with double-submit defense
   const handleSendMessage = async (textToSend?: string) => {
@@ -104,7 +139,15 @@ export const InterviewPage: React.FC = () => {
       // 1. Post patient response to AI Engine
       const aiResponse = await aiApi.sendMessage(activeSession.id, text);
 
-      // 2. Add AI response to conversation
+      // 2. Add AI response to conversation and reconcile optimistic patient message
+      const confirmedPatientMsg: AIMessage = {
+        id: aiResponse.patient_message?.id || optimisticPatientMsg.id,
+        session_id: activeSession.id,
+        role: 'patient',
+        content: text,
+        created_at: aiResponse.patient_message?.created_at || optimisticPatientMsg.created_at,
+      };
+
       const newAIMessage: AIMessage = {
         id: aiResponse.id,
         session_id: aiResponse.session_id,
@@ -117,7 +160,10 @@ export const InterviewPage: React.FC = () => {
         created_at: aiResponse.created_at || new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, newAIMessage]);
+      setMessages((prev) => {
+        const withoutOptimistic = prev.filter((m) => m.id !== optimisticPatientMsg.id);
+        return [...withoutOptimistic, confirmedPatientMsg, newAIMessage];
+      });
 
       if (aiResponse.current_step_label) {
         setCurrentStepLabel(aiResponse.current_step_label);
@@ -195,8 +241,9 @@ export const InterviewPage: React.FC = () => {
 
             {isComplete && (
               <button
-                onClick={() => navigate('/upload')}
-                className="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:bg-primary-container transition-all flex items-center gap-1.5 shadow-xs"
+                onClick={handleContinueToNextStep}
+                disabled={isCompleting}
+                className="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:bg-primary-container transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-50"
               >
                 <span>Upload Documents</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -321,10 +368,11 @@ export const InterviewPage: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate('/upload')}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs shadow-md hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  onClick={handleContinueToNextStep}
+                  disabled={isCompleting}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs shadow-md hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <span>Continue to Medical Documents</span>
+                  <span>{isCompleting ? 'Completing Session...' : 'Continue to Medical Documents'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

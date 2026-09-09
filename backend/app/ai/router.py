@@ -223,8 +223,8 @@ class AITaskRouter:
                     raise
 
                 logger.warning(
-                    "AI task '%s': retryable error from '%s': %s [%s]. "
-                    "Trying next provider.",
+                    "AI task '%s': error from '%s': %s [%s]. "
+                    "Trying next provider in chain.",
                     task.value,
                     provider_name,
                     exc.message,

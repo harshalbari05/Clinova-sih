@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ProgressSteps from '../components/ProgressSteps';
@@ -18,12 +18,14 @@ import {
   Calendar,
   Sparkles,
   CheckCircle2,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 
 export const IdentifyPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login, setSelectedHospital, setActiveConsultation } = usePatient();
+  const { login, selectedHospital, setSelectedHospital, setActiveConsultation } = usePatient();
 
   const [mode, setMode] = useState<'register' | 'login'>('register');
   const [signInMethod, setSignInMethod] = useState<'mobile' | 'abha' | 'email'>('mobile');
@@ -32,6 +34,9 @@ export const IdentifyPage: React.FC = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>('');
   const [loadingHospitals, setLoadingHospitals] = useState<boolean>(true);
+  const [hospitalLoadError, setHospitalLoadError] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Form Fields
   const [identifier, setIdentifier] = useState('');
@@ -50,23 +55,56 @@ export const IdentifyPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Active selected hospital object
+  const activeSelectedHospital = hospitals.find((h) => h.id === selectedHospitalId) || null;
+
   // Load public hospital directory on mount
+  const loadHospitals = useCallback(async () => {
+    try {
+      setLoadingHospitals(true);
+      setHospitalLoadError('');
+      const list = await hospitalApi.listHospitals();
+      const validList = Array.isArray(list) ? list : [];
+      setHospitals(validList);
+      if (validList.length > 0) {
+        setSelectedHospitalId((prev) => {
+          if (prev && validList.some((h) => h.id === prev)) return prev;
+          if (selectedHospital && validList.some((h) => h.id === selectedHospital.id)) {
+            return selectedHospital.id;
+          }
+          return validList[0].id;
+        });
+      }
+    } catch (err: any) {
+      console.error('Failed to load hospital directory:', err);
+      setHospitalLoadError('Unable to load hospital facilities. Please check your connection and retry.');
+    } finally {
+      setLoadingHospitals(false);
+    }
+  }, [selectedHospital]);
+
   useEffect(() => {
-    async function loadHospitals() {
-      try {
-        setLoadingHospitals(true);
-        const list = await hospitalApi.listHospitals();
-        setHospitals(list);
-        if (list.length > 0) {
-          setSelectedHospitalId(list[0].id);
-        }
-      } catch (err: any) {
-        console.error('Failed to load hospital directory:', err);
-      } finally {
-        setLoadingHospitals(false);
+    loadHospitals();
+  }, [loadHospitals]);
+
+  // Close dropdown on click-outside or Escape key
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
       }
     }
-    loadHospitals();
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -237,26 +275,146 @@ export const IdentifyPage: React.FC = () => {
           </div>
 
           {/* Hospital Selection (Authoritative - from GET /api/v1/hospitals) */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-primary" />
-              <span>Select Hospital Facility *</span>
+          <div className="mb-5 relative" ref={dropdownRef}>
+            <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-primary" />
+                <span>Select Hospital Facility *</span>
+              </span>
+              {loadingHospitals && (
+                <span className="text-[10px] text-primary animate-pulse font-normal">Loading directory...</span>
+              )}
             </label>
+
             {loadingHospitals ? (
-              <div className="w-full h-11 bg-surface-container-low animate-pulse rounded-xl" />
+              <div className="w-full h-11 bg-surface-container-low animate-pulse rounded-xl flex items-center px-3.5 border border-outline-variant/30">
+                <span className="text-xs text-on-surface-variant font-medium">Loading hospital directory...</span>
+              </div>
+            ) : hospitalLoadError ? (
+              <div className="p-3 rounded-xl bg-error-container/30 border border-error/30 text-xs flex items-center justify-between">
+                <span className="text-error font-medium">{hospitalLoadError}</span>
+                <button
+                  type="button"
+                  onClick={loadHospitals}
+                  className="px-2.5 py-1 rounded-lg bg-primary text-on-primary text-xs font-bold hover:bg-primary-container"
+                >
+                  Retry
+                </button>
+              </div>
             ) : (
-              <select
-                value={selectedHospitalId}
-                onChange={(e) => setSelectedHospitalId(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low text-on-surface text-sm border border-outline-variant/50 font-medium cursor-pointer"
-                required
-              >
-                {hospitals.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.name} {h.city ? `(${h.city}, ${h.state || ''})` : ''}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                {/* Interactive Custom Dropdown Trigger */}
+                <button
+                  type="button"
+                  id="hospital-selector"
+                  data-testid="hospital-selector"
+                  aria-haspopup="listbox"
+                  aria-expanded={isDropdownOpen}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`w-full min-h-[44px] px-3.5 py-2 rounded-xl bg-surface-container-low text-on-surface text-sm border transition-all flex items-center justify-between cursor-pointer text-left ${
+                    isDropdownOpen
+                      ? 'border-primary ring-2 ring-primary/20 shadow-xs'
+                      : 'border-outline-variant/50 hover:border-primary/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate pr-2">
+                    <Building2 className="w-4 h-4 text-primary shrink-0" />
+                    <div className="flex flex-col truncate">
+                      {activeSelectedHospital ? (
+                        <div className="flex items-baseline gap-1.5 truncate">
+                          <span className="font-semibold text-on-surface text-xs sm:text-sm truncate">
+                            {activeSelectedHospital.name}
+                          </span>
+                          {(activeSelectedHospital.city || activeSelectedHospital.state) && (
+                            <span className="text-[11px] text-on-surface-variant font-normal shrink-0">
+                              • {[activeSelectedHospital.city, activeSelectedHospital.state].filter(Boolean).join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-on-surface-variant text-xs sm:text-sm">
+                          Select hospital facility...
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`w-4 h-4 text-on-surface-variant shrink-0 transition-transform duration-200 ${
+                      isDropdownOpen ? 'rotate-180 text-primary' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown Options Menu */}
+                {isDropdownOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Available Hospitals"
+                    data-testid="hospital-dropdown-menu"
+                    className="absolute top-full left-0 right-0 mt-1.5 z-30 bg-surface-container-lowest border border-outline-variant/50 rounded-xl shadow-card-hover p-1.5 max-h-60 overflow-y-auto space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    {hospitals.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-on-surface-variant">
+                        No hospital facilities currently available.
+                      </div>
+                    ) : (
+                      hospitals.map((h) => {
+                        const isSelected = h.id === selectedHospitalId;
+                        return (
+                          <div
+                            key={h.id}
+                            role="option"
+                            aria-selected={isSelected}
+                            data-testid={`hospital-option-${h.id}`}
+                            onClick={() => {
+                              setSelectedHospitalId(h.id);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`p-2.5 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
+                              isSelected
+                                ? 'bg-primary/10 text-primary font-semibold'
+                                : 'text-on-surface hover:bg-surface-container-low font-normal'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5 truncate">
+                              <Building2 className={`w-4 h-4 mt-0.5 shrink-0 ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`} />
+                              <div className="flex flex-col truncate">
+                                <span className="text-xs sm:text-sm font-semibold truncate">
+                                  {h.name}
+                                </span>
+                                {(h.city || h.state) && (
+                                  <span className="text-[11px] text-on-surface-variant">
+                                    {[h.city, h.state].filter(Boolean).join(', ')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <Check className="w-4 h-4 text-primary shrink-0 ml-2" />
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
+                {/* Synchronized select for accessibility and form automation */}
+                <select
+                  name="hospital_id"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  value={selectedHospitalId}
+                  onChange={(e) => setSelectedHospitalId(e.target.value)}
+                  className="sr-only"
+                >
+                  {hospitals.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
             <span className="text-[11px] text-on-surface-variant mt-1 block">
               Powered by Clinova Hospital Directory API

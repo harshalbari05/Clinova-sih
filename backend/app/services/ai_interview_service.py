@@ -55,6 +55,7 @@ from app.ai.interview.schemas import (
     AIInterviewMessageResponse,
     ClinicalInterviewAIResponse,
     InterviewSummary,
+    SECTION_PRIORITY_ORDER,
 )
 from app.ai.interview.state import derive_interview_state, is_interview_completable
 from app.ai.prompts.clinical_history import build_system_prompt
@@ -79,7 +80,7 @@ __all__ = [
 ]
 
 # ---------------------------------------------------------------------------
-# Fallback questions (used when AI provider fails or AI_INTERVIEW_ENABLED=False)
+# Multi-lingual clinical section questions & intake engine dictionary
 # ---------------------------------------------------------------------------
 
 _OPENING_QUESTIONS: dict[str, str] = {
@@ -98,10 +99,141 @@ _OPENING_QUESTIONS: dict[str, str] = {
 }
 _DEFAULT_OPENING_QUESTION = _OPENING_QUESTIONS["English"]
 
-_FALLBACK_QUESTION = (
-    "Thank you for sharing that. "
-    "Could you tell me more about when this started and what makes it better or worse?"
-)
+_SECTION_QUESTIONS: dict[str, dict[str, str]] = {
+    "chief_complaint": {
+        "English": (
+            "Could you please describe what brings you in today and what your main symptoms are?"
+        ),
+        "Hindi": (
+            "कृपया बताएं कि आज आपको क्या मुख्य परेशानी या लक्षण महसूस हो रहे हैं?"
+        ),
+        "Marathi": (
+            "कृपया सांगा आज आपल्याला काय मुख्य त्रास होत आहे आणि आपली लक्षणे कोणती आहेत?"
+        ),
+    },
+    "history_of_present_illness": {
+        "English": (
+            "Could you tell me more about when this started, how severe it is, and what makes it better or worse?"
+        ),
+        "Hindi": (
+            "कृपया बताएं कि यह परेशानी कब शुरू हुई, कितनी गंभीर है, और किस वजह से आराम या दर्द बढ़ता है?"
+        ),
+        "Marathi": (
+            "हा त्रास नेमका कधीपासून सुरू झाला, किती तीव्र आहे, आणि कशामुळे आराम मिळतो किंवा त्रास वाढतो?"
+        ),
+    },
+    "past_medical_history": {
+        "English": (
+            "Do you have any existing medical conditions, such as diabetes, high blood pressure, asthma, or thyroid disease?"
+        ),
+        "Hindi": (
+            "क्या आपको पहले से कोई बीमारी है, जैसे कि मधुमेह (शुगर), उच्च रक्तचाप (बीपी), दमा, या थायराइड?"
+        ),
+        "Marathi": (
+            "आपल्याला पूर्वीचा काही आजार आहे का, जसे की मधुमेह (डायबेटिस), रक्तदाब (बीपी), दमा, किंवा थायरॉईड?"
+        ),
+    },
+    "past_surgical_history": {
+        "English": (
+            "Have you ever had any surgeries, operations, or hospital admissions in the past?"
+        ),
+        "Hindi": (
+            "क्या आपकी पहले कोई सर्जरी (ऑपरेशन) हुई है या कभी अस्पताल में भर्ती होना पड़ा है?"
+        ),
+        "Marathi": (
+            "आपली पूर्वी कोणती शस्त्रक्रिया (ऑपरेशन) झाली आहे का किंवा रुग्णालयात दाखल व्हावे लागले होते का?"
+        ),
+    },
+    "drug_history": {
+        "English": (
+            "Are you currently taking any regular medications, ayurvedic medicines, or supplements?"
+        ),
+        "Hindi": (
+            "क्या आप वर्तमान में कोई नियमित दवाइयां, आयुर्वेदिक दवाएं, या सप्लीमेंट्स ले रहे हैं?"
+        ),
+        "Marathi": (
+            "आपण सध्या कोणतीही नियमित औषधे, आयुर्वेदिक उपचार, किंवा गोळ्या घेत आहात का?"
+        ),
+    },
+    "allergy_history": {
+        "English": (
+            "Do you have any known allergies to medicines, food items, dust, or other substances?"
+        ),
+        "Hindi": (
+            "क्या आपको किसी दवा, भोजन, धूल, या किसी अन्य चीज़ से एलर्जी है?"
+        ),
+        "Marathi": (
+            "आपल्याला कोणत्याही औषधांची, अन्नाची, किंवा इतर कशाची ॲलर्जी आहे का?"
+        ),
+    },
+    "family_history": {
+        "English": (
+            "Is there a history of chronic illnesses in your family, such as heart disease, diabetes, or cancer?"
+        ),
+        "Hindi": (
+            "क्या आपके परिवार में किसी को हृदय रोग, मधुमेह, या कैंसर जैसी गंभीर बीमारी का इतिहास रहा है?"
+        ),
+        "Marathi": (
+            "आपल्या कुटुंबात कोणाला हृदयविकार, मधुमेह, किंवा इतर गंभीर आजारांचा इतिहास आहे का?"
+        ),
+    },
+    "personal_history": {
+        "English": (
+            "Could you briefly tell me about your daily routine, diet, sleep, and if you use tobacco or alcohol?"
+        ),
+        "Hindi": (
+            "कृपया अपनी दिनचर्या, खान-पान, नींद, और तंबाकू या शराब के सेवन के बारे में संक्षेप में बताएं?"
+        ),
+        "Marathi": (
+            "कृपया आपली दिनचर्या, आहार, झोप, आणि तंबाखू किंवा मद्यपानाचे व्यसन याविषयी थोडक्यात माहिती द्याल का?"
+        ),
+    },
+    "review_of_systems": {
+        "English": (
+            "Are you experiencing any other symptoms, such as fever, cough, chest discomfort, or headache?"
+        ),
+        "Hindi": (
+            "क्या आपको कोई अन्य लक्षण भी हैं, जैसे बुखार, खांसी, सीने में दर्द, या सिरदर्द?"
+        ),
+        "Marathi": (
+            "आपल्याला ताप, खोकला, छातीत दुखणे, किंवा डोकेदुखी अशी इतर काही लक्षणे जाणवत आहेत का?"
+        ),
+    },
+}
+
+_COMPLETION_MESSAGES: dict[str, str] = {
+    "English": (
+        "Thank you for providing your details. Your clinical history intake is complete. "
+        "The doctor will review your history during your consultation."
+    ),
+    "Hindi": (
+        "विवरण देने के लिए धन्यवाद। आपका नैदानिक इतिहास पूरा हो गया है। "
+        "डॉक्टर आपके परामर्श के दौरान इसकी समीक्षा करेंगे।"
+    ),
+    "Marathi": (
+        "माहिती दिल्याबद्दल धन्यवाद. आपली वैद्यकीय माहिती नोंदवून पूर्ण झाली आहे. "
+        "डॉक्टर आपल्या तपासणीच्या वेळी याची पाहणी करतील."
+    ),
+}
+
+_FALLBACK_QUESTION = _SECTION_QUESTIONS["history_of_present_illness"]["English"]
+
+
+def _get_localized_question(section: str, language: str) -> str:
+    """Return the clinical question for a section in the requested language."""
+    section_map = _SECTION_QUESTIONS.get(
+        section, _SECTION_QUESTIONS["history_of_present_illness"]
+    )
+    return section_map.get(
+        language, section_map.get("English", _FALLBACK_QUESTION)
+    )
+
+
+def _get_completion_message(language: str) -> str:
+    """Return the intake completion message in the requested language."""
+    return _COMPLETION_MESSAGES.get(
+        language, _COMPLETION_MESSAGES["English"]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -183,33 +315,10 @@ async def process_patient_message(
     history = (await db.execute(stmt)).scalar_one_or_none()
 
     # 2. Check feature flag
-    if not ai_settings.AI_INTERVIEW_ENABLED:
+    is_fallback = not ai_settings.AI_INTERVIEW_ENABLED
+    if is_fallback:
         logger.info(
-            "AI_INTERVIEW_ENABLED is False; using controlled placeholder response."
-        )
-        ai_msg = await ai_message_service.add_backend_message(
-            db=db,
-            session_id=session_id,
-            sender="ai",
-            message=_FALLBACK_QUESTION,
-            message_type="text",
-        )
-        return AIInterviewMessageResponse(
-            id=patient_message.id,
-            ai_session_id=patient_message.ai_session_id,
-            sender=patient_message.sender,
-            message=patient_message.message,
-            message_type=patient_message.message_type,
-            created_at=patient_message.created_at,
-            patient_message=patient_message,
-            ai_message=ai_msg,
-            interview=InterviewSummary(
-                next_question=_FALLBACK_QUESTION,
-                current_section="chief_complaint",
-                interview_complete=False,
-                missing_information=[],
-            ),
-            clinical_history_updates={},
+            "AI_INTERVIEW_ENABLED is False; using adaptive clinical intake engine."
         )
 
     # 3. Build chronological conversation context (bounded)
@@ -227,77 +336,91 @@ async def process_patient_message(
     current_state = derive_interview_state(history, total_messages)
     history_json = format_clinical_history_for_prompt(history)
 
-    # 5. Build system prompt with safety constraints and session language
-    system_prompt = build_system_prompt(
-        language=session.language,
-        current_history_json=history_json,
-        current_section=current_state.current_section,
-        missing_sections=current_state.missing_sections,
-    )
+    parsed_response: ClinicalInterviewAIResponse | None = None
 
-    # 6. Route through AITaskRouter
-    ai_request = AIRequest(
-        messages=messages,
-        system_prompt=system_prompt,
-        max_tokens=600,
-        temperature=0.3,
-    )
-
-    parsed_response: ClinicalInterviewAIResponse
-    try:
-        response = await task_router.generate(
-            task=AITaskType.HISTORY_INTERVIEW,
-            request=ai_request,
-        )
-        parsed_response = parse_interview_response(response)
-    except AIProviderError as exc:
-        logger.warning(
-            "AI provider error (task=HISTORY_INTERVIEW, kind=%s): %s. "
-            "Falling back to safe placeholder response.",
-            exc.kind.value,
-            exc.message,
-        )
-        parsed_response = ClinicalInterviewAIResponse(
-            next_question=_FALLBACK_QUESTION,
+    if not is_fallback:
+        # 5. Build system prompt with safety constraints and session language
+        system_prompt = build_system_prompt(
+            language=session.language,
+            current_history_json=history_json,
             current_section=current_state.current_section,
-            interview_complete=False,
-        )
-    except Exception as exc:
-        logger.warning(
-            "Unexpected error in interview processing: %s. Using fallback response.",
-            exc,
-        )
-        parsed_response = ClinicalInterviewAIResponse(
-            next_question=_FALLBACK_QUESTION,
-            current_section=current_state.current_section,
-            interview_complete=False,
+            missing_sections=current_state.missing_sections,
         )
 
-    # 7. Merge extracted patient facts into ClinicalHistory
+        # 6. Route through AITaskRouter (with fallback chain)
+        ai_request = AIRequest(
+            messages=messages,
+            system_prompt=system_prompt,
+            max_tokens=600,
+            temperature=0.3,
+        )
+
+        try:
+            response = await task_router.generate(
+                task=AITaskType.HISTORY_INTERVIEW,
+                request=ai_request,
+            )
+            parsed_response = parse_interview_response(response)
+        except AIProviderError as exc:
+            logger.warning(
+                "AI provider error (task=HISTORY_INTERVIEW, kind=%s): %s. "
+                "Switching to adaptive clinical intake engine.",
+                exc.kind.value,
+                exc.message,
+            )
+            is_fallback = True
+        except Exception as exc:
+            logger.warning(
+                "Unexpected error in interview processing: %s. Using adaptive clinical intake engine.",
+                exc,
+            )
+            is_fallback = True
+
     clinical_history_updates: dict[str, str | None] = {}
-    if (
-        parsed_response.extracted_information
-        and parsed_response.extracted_information.has_any_content()
-    ):
-        updates = parsed_response.extracted_information.to_update_dict()
-        if updates:
-            if history is None:
-                # First clinical history creation
-                history = ClinicalHistory(
-                    consultation_id=consultation_id,
-                    **updates,
-                )
-                db.add(history)
-            else:
-                # Merge updates: never overwrite existing content with None/empty
-                for field, val in updates.items():
-                    if hasattr(history, field) and val is not None and str(val).strip():
-                        setattr(history, field, val)
-                db.add(history)
 
-            await db.flush()
-            await db.refresh(history)
-            clinical_history_updates = updates
+    # 7. State update and question generation
+    if is_fallback or parsed_response is None:
+        is_fallback = True
+
+        # Fallback does NOT invent structured clinical history updates
+        clinical_history_updates = {}
+
+        if current_state.interview_complete:
+            next_q = _get_completion_message(session.language)
+        else:
+            next_q = _get_localized_question(
+                current_state.current_section, session.language
+            )
+
+        parsed_response = ClinicalInterviewAIResponse(
+            next_question=next_q,
+            current_section=current_state.current_section,
+            interview_complete=current_state.interview_complete,
+            missing_information=current_state.missing_sections,
+        )
+    else:
+        # Merge extracted patient facts from live LLM structured output
+        if (
+            parsed_response.extracted_information
+            and parsed_response.extracted_information.has_any_content()
+        ):
+            updates = parsed_response.extracted_information.to_update_dict()
+            if updates:
+                if history is None:
+                    history = ClinicalHistory(
+                        consultation_id=consultation_id,
+                        **updates,
+                    )
+                    db.add(history)
+                else:
+                    for field, val in updates.items():
+                        if hasattr(history, field) and val is not None and str(val).strip():
+                            setattr(history, field, val)
+                    db.add(history)
+
+                await db.flush()
+                await db.refresh(history)
+                clinical_history_updates = updates
 
     # 7b. Evaluate red-flag triage and synchronize alerts
     consultation_stmt = select(Consultation).where(Consultation.id == consultation_id)
@@ -320,13 +443,8 @@ async def process_patient_message(
 
     # 8. Check interview completion criteria
     is_complete = is_interview_completable(
-        history, parsed_response.interview_complete
+        history, parsed_response.interview_complete, is_fallback=is_fallback
     )
-    if is_complete and session.status != "completed":
-        session.status = "completed"
-        session.completed_at = datetime.now(tz=timezone.utc)
-        db.add(session)
-        await db.flush()
 
     # 9. Store the AI assistant message (server-controlled)
     ai_msg = await ai_message_service.add_backend_message(
@@ -352,6 +470,7 @@ async def process_patient_message(
             current_section=parsed_response.current_section or current_state.current_section,
             interview_complete=is_complete,
             missing_information=parsed_response.missing_information,
+            is_fallback=is_fallback,
         ),
         clinical_history_updates=clinical_history_updates,
     )

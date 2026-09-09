@@ -1053,3 +1053,190 @@ async def test_34_regression_full_clinical_interview_turn(
         assert hist.chief_complaint == "Severe abdominal pain"
         assert hist.history_of_present_illness is not None
         assert "2 days ago" in hist.history_of_present_illness
+
+
+# ---------------------------------------------------------------------------
+# 10. REGRESSION TESTS: PREVENT STALE REPETITIVE QUESTIONS & VERIFY LANGUAGE
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_35_regression_successive_patient_responses_do_not_repeat_stale_question(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """35. Proves that Turn 1 and Turn 2 return different questions and do not repeat a stale question."""
+    token, _, sid = await _setup_session(client, db_session, email="regr35@test.com")
+
+    # Simulate provider failure (e.g. missing API key / timeout)
+    with patch.object(task_router, "generate", new_callable=AsyncMock) as mock_gen:
+        mock_gen.side_effect = AIProviderError(
+            kind=AIErrorKind.AUTH_ERROR,
+            provider="gemini",
+            message="No Gemini API key was provided.",
+        )
+
+        # Turn 1: Patient answers chief complaint
+        res1 = await client.post(
+            ai_messages_url(sid),
+            json={"message": "ok"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res1.status_code == 201
+        data1 = res1.json()
+        q1 = data1["ai_message"]["message"]
+        sec1 = data1["interview"]["current_section"]
+        assert len(q1) > 0
+        assert data1["interview"]["is_fallback"] is True
+
+        # Turn 2: Patient answers with "no"
+        res2 = await client.post(
+            ai_messages_url(sid),
+            json={"message": "no"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res2.status_code == 201
+        data2 = res2.json()
+        q2 = data2["ai_message"]["message"]
+        sec2 = data2["interview"]["current_section"]
+        assert len(q2) > 0
+
+        # CRITICAL REGRESSION ASSERTIONS:
+        # 1. Turn 2 must NOT repeat Turn 1's question
+        assert q1 != q2, f"Turn 2 repeated the identical question from Turn 1: {q1}"
+        # 2. Clinical section must progress
+        assert sec1 != sec2, f"Clinical section did not progress: {sec1} == {sec2}"
+        # 3. Message IDs must be separate
+        assert data1["ai_message"]["id"] != data2["ai_message"]["id"]
+
+
+@pytest.mark.asyncio
+async def test_36_language_propagation_marathi_hindi_english(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """36. Verifies that session language (Marathi, Hindi, English) propagates to AI interview questions."""
+    for lang in ["Marathi", "Hindi", "English"]:
+        token, _, sid = await _setup_session(
+            client, db_session, email=f"lang_{lang.lower()}@test.com", language=lang
+        )
+
+        with patch.object(task_router, "generate", new_callable=AsyncMock) as mock_gen:
+            mock_gen.side_effect = AIProviderError(
+                kind=AIErrorKind.AUTH_ERROR,
+                provider="gemini",
+                message="No API key",
+            )
+
+            res = await client.post(
+                ai_messages_url(sid),
+                json={"message": "symptoms description"},
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            assert res.status_code == 201
+            question = res.json()["ai_message"]["message"]
+
+            if lang == "Marathi":
+                assert "कधीपासून" in question or "त्रास" in question, f"Expected Marathi in question: {question}"
+            elif lang == "Hindi":
+                assert "कब" in question or "परेशानी" in question, f"Expected Hindi in question: {question}"
+            else:
+                assert "started" in question or "severe" in question, f"Expected English in question: {question}"
+
+
+@pytest.mark.asyncio
+async def test_37_interview_summary_is_fallback_flag(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """37. Verifies is_fallback flag on InterviewSummary distinguishes live AI from fallback."""
+    token, _, sid = await _setup_session(client, db_session, email="flag37@test.com")
+
+    # Case A: Live AI provider succeeds -> is_fallback is False
+    live_resp = _make_mock_ai_response(
+        next_question="When did your fever start?",
+        chief_complaint="High fever",
+        current_section="history_of_present_illness",
+    )
+    with patch.object(task_router, "generate", new_callable=AsyncMock) as mock_gen:
+        mock_gen.return_value = live_resp
+        res = await client.post(
+            ai_messages_url(sid),
+            json={"message": "High fever"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res.status_code == 201
+        assert res.json()["interview"]["is_fallback"] is False
+
+    # Case B: AI provider fails -> is_fallback is True
+    with patch.object(task_router, "generate", new_callable=AsyncMock) as mock_gen:
+        mock_gen.side_effect = AIProviderError(
+            kind=AIErrorKind.PROVIDER_UNAVAILABLE,
+            provider="gemini",
+            message="Offline",
+        )
+        res_fb = await client.post(
+            ai_messages_url(sid),
+            json={"message": "since yesterday"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res_fb.status_code == 201
+        assert res_fb.json()["interview"]["is_fallback"] is True
+
+
+@pytest.mark.asyncio
+async def test_38_interview_completion_and_session_status_transition(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """38. Verifies interview reaches completion, returns interview_complete=True, and transitions to completed via complete endpoint."""
+    token, cid, sid = await _setup_session(client, db_session, email="flow38@test.com")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    answers = [
+        "Severe fever and cough for 3 days",
+        "Started 3 days ago, worse at night",
+        "No past medical history",
+        "No past surgeries",
+        "No regular medications",
+        "No known allergies",
+        "No family history of illness",
+        "Non-smoker, desk job",
+        "No other symptoms",
+    ]
+
+    final_res = None
+    for ans in answers:
+        final_res = await client.post(
+            ai_messages_url(sid),
+            json={"message": ans},
+            headers=headers,
+        )
+        assert final_res.status_code == 201
+
+    assert final_res is not None
+    data = final_res.json()
+    assert data["interview"]["interview_complete"] is True
+    assert "complete" in data["ai_message"]["message"].lower()
+
+    # Session status before calling /complete is in_progress
+    sess_before = await client.get(ai_session_url(sid), headers=headers)
+    assert sess_before.status_code == 200
+    assert sess_before.json()["status"] == "in_progress"
+
+    # Call complete endpoint explicitly
+    comp_res = await client.post(
+        f"/api/v1/ai-sessions/{sid}/complete",
+        headers=headers,
+    )
+    assert comp_res.status_code == 200
+    assert comp_res.json()["status"] == "completed"
+    assert comp_res.json()["completed_at"] is not None
+
+    # Session status after calling /complete is completed
+    sess_after = await client.get(ai_session_url(sid), headers=headers)
+    assert sess_after.status_code == 200
+    assert sess_after.json()["status"] == "completed"
+
+    # Second completion returns 409 Conflict
+    comp_dup = await client.post(
+        f"/api/v1/ai-sessions/{sid}/complete",
+        headers=headers,
+    )
+    assert comp_dup.status_code == 409

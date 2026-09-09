@@ -1,11 +1,13 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { PatientProvider } from '../context/PatientContext';
 import LandingPage from '../pages/LandingPage';
 import ConsentPage from '../pages/ConsentPage';
 import LanguagePage from '../pages/LanguagePage';
+import IdentifyPage from '../pages/IdentifyPage';
+import InterviewPage from '../pages/InterviewPage';
 import PriorityBadge from '../components/PriorityBadge';
 import EmergencyOverlay from '../components/EmergencyOverlay';
 import * as api from '../api';
@@ -274,4 +276,208 @@ describe('Patient Portal Component Tests', () => {
       expect(screen.queryByText('#24')).not.toBeInTheDocument();
     });
   });
+
+  it('loads hospitals, opens selector, displays hospitals, selects a hospital, and submits consultation with selected hospital ID', async () => {
+    const mockHospitals = [
+      { id: 'hosp-1', name: 'AIIMS Delhi', city: 'New Delhi', state: 'Delhi' },
+      { id: 'hosp-2', name: 'Clinova General Hospital', city: 'Pune', state: 'Maharashtra' },
+      { id: 'hosp-3', name: 'Demo Hospital', city: 'Mumbai', state: 'Maharashtra' },
+    ];
+
+    (api.hospitalApi.listHospitals as any).mockResolvedValue(mockHospitals);
+    (api.authApi.register as any).mockResolvedValue({ id: 'usr-new' });
+    (api.authApi.login as any).mockResolvedValue({
+      access_token: 'new-token',
+      token_type: 'bearer',
+      account_type: 'patient',
+      user: { id: 'usr-new', email: 'ramesh@example.com', role: 'patient', is_active: true },
+      patient: mockPatient,
+    });
+    (api.consultationApi.createConsultation as any).mockResolvedValue({
+      id: 'con-202',
+      patient_id: 'pat-1',
+      hospital_id: 'hosp-2',
+      chief_complaint: 'High fever',
+      status: 'initiated',
+      created_at: new Date().toISOString(),
+    });
+
+    render(
+      <MemoryRouter>
+        <PatientProvider>
+          <IdentifyPage />
+        </PatientProvider>
+      </MemoryRouter>
+    );
+
+    // 1. Verify hospitals are loaded and initial selector renders
+    await waitFor(() => {
+      expect(screen.getAllByText('AIIMS Delhi').length).toBeGreaterThanOrEqual(1);
+    });
+
+    // 2. Click hospital selector to open dropdown menu
+    const selectorBtn = screen.getByTestId('hospital-selector');
+    expect(selectorBtn).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(selectorBtn);
+
+    // 3. Verify dropdown menu opens and displays all hospitals
+    await waitFor(() => {
+      expect(selectorBtn).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByTestId('hospital-dropdown-menu')).toBeInTheDocument();
+      expect(screen.getAllByText('Clinova General Hospital').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Demo Hospital').length).toBeGreaterThanOrEqual(1);
+    });
+
+    // 4. Select a hospital (Clinova General Hospital)
+    const optionHosp2 = screen.getByTestId('hospital-option-hosp-2');
+    fireEvent.click(optionHosp2);
+
+    // 5. Verify dropdown closes and selected hospital is reflected in UI
+    await waitFor(() => {
+      expect(selectorBtn).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByTestId('hospital-dropdown-menu')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Clinova General Hospital').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText(/Pune, Maharashtra/i)).toBeInTheDocument();
+    });
+
+    // 6. Fill required fields and submit form
+    const nameInput = screen.getByPlaceholderText(/e\.g\. Ramesh Kumar/i);
+    const emailInput = screen.getByPlaceholderText(/patient@example\.com/i);
+    const complaintInput = screen.getByPlaceholderText(/e\.g\. High fever/i);
+
+    fireEvent.change(nameInput, { target: { value: 'Ramesh Kumar' } });
+    fireEvent.change(emailInput, { target: { value: 'ramesh@example.com' } });
+    fireEvent.change(complaintInput, { target: { value: 'High fever' } });
+
+    const continueBtn = screen.getByRole('button', { name: /Continue to Informed Consent/i });
+    fireEvent.click(continueBtn);
+
+    // 7. Verify consultation is created using selected hospital ID
+    await waitFor(() => {
+      expect(api.consultationApi.createConsultation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hospital_id: 'hosp-2',
+          chief_complaint: 'High fever',
+        })
+      );
+    });
+  });
+
+  it('completes AI interview upon final turn, displays final message, calls complete session API, and navigates to /upload', async () => {
+    const mockSession = {
+      id: 'sess-intake-99',
+      consultation_id: 'con-101',
+      language: 'English',
+      status: 'in_progress',
+      started_at: new Date().toISOString(),
+      completed_at: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    localStorage.setItem('clinova_patient_token', 'mock-token');
+    localStorage.setItem('clinova_patient_data', JSON.stringify(mockPatient));
+    localStorage.setItem('clinova_active_consultation', JSON.stringify(mockConsultation));
+    localStorage.setItem('clinova_active_session', JSON.stringify(mockSession));
+
+    const initialMessages = [
+      {
+        id: 'msg-ai-1',
+        session_id: 'sess-intake-99',
+        role: 'ai' as const,
+        content: 'Are you experiencing any other symptoms, such as fever, cough, chest discomfort, or headache?',
+        step: 'review_of_systems',
+        current_step_label: 'Review of Systems',
+        options: ['No other symptoms', 'Mild headache'],
+        is_complete: false,
+        created_at: new Date().toISOString(),
+      },
+    ];
+
+    (api.aiApi.listMessages as any).mockResolvedValue({
+      items: initialMessages,
+      total: 1,
+    });
+    (api.aiApi.getSession as any).mockResolvedValue(mockSession);
+
+    const finalAIMessageResponse = {
+      id: 'msg-final-turn',
+      session_id: 'sess-intake-99',
+      role: 'ai' as const,
+      content: 'Thank you for providing your details. Your clinical history intake is complete. The doctor will review your history during your consultation.',
+      step: 'review_of_systems',
+      current_step_label: 'Clinical Intake Complete',
+      options: [],
+      is_complete: true,
+      patient_message: {
+        id: 'msg-pat-final',
+        session_id: 'sess-intake-99',
+        role: 'patient',
+        content: 'No other symptoms',
+        created_at: new Date().toISOString(),
+      },
+      interview: {
+        next_question: 'Thank you for providing your details. Your clinical history intake is complete. The doctor will review your history during your consultation.',
+        current_section: 'review_of_systems',
+        interview_complete: true,
+        missing_information: [],
+        is_fallback: true,
+      },
+    };
+
+    (api.aiApi.sendMessage as any).mockResolvedValue(finalAIMessageResponse);
+    (api.aiApi.completeSession as any).mockResolvedValue({
+      ...mockSession,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/interview']}>
+        <PatientProvider>
+          <Routes>
+            <Route path="/interview" element={<InterviewPage />} />
+            <Route path="/upload" element={<div data-testid="upload-page">Document Upload Screen</div>} />
+          </Routes>
+        </PatientProvider>
+      </MemoryRouter>
+    );
+
+    // 1. Initial message rendered
+    await waitFor(() => {
+      expect(screen.getByText(/Are you experiencing any other symptoms/i)).toBeInTheDocument();
+    });
+
+    // 2. Patient submits final response
+    const textarea = screen.getByPlaceholderText(/Type your response in English/i);
+    fireEvent.change(textarea, { target: { value: 'No other symptoms' } });
+    const sendBtn = screen.getByTitle('Send Message');
+    fireEvent.click(sendBtn);
+
+    // 3. Final AI completion response is rendered
+    await waitFor(() => {
+      expect(api.aiApi.sendMessage).toHaveBeenCalledWith('sess-intake-99', 'No other symptoms');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Your clinical history intake is complete/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Clinical Intake Complete/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Continue to Medical Documents/i })).toBeInTheDocument();
+    });
+
+    // 4. Click completion action to advance to Step 5
+    const continueBtn = screen.getByRole('button', { name: /Continue to Medical Documents/i });
+    fireEvent.click(continueBtn);
+
+    // 5. Verify completeSession API was called
+    await waitFor(() => {
+      expect(api.aiApi.completeSession).toHaveBeenCalledWith('sess-intake-99');
+    });
+
+    // 6. Verify navigation to /upload succeeded
+    await waitFor(() => {
+      expect(screen.getByTestId('upload-page')).toBeInTheDocument();
+    });
+  });
 });
+

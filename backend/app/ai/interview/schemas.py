@@ -202,6 +202,7 @@ class InterviewSummary(BaseModel):
     current_section: str | None = None
     interview_complete: bool = False
     missing_information: list[str] = Field(default_factory=list)
+    is_fallback: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

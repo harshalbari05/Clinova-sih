@@ -46,7 +46,8 @@
         {
           "microphonePermission": "The app needs access to your microphone to allow voice intake answers."
         }
-      ]
+      ],
+      "expo-asset"
     ]
   }
 }

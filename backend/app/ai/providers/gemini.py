@@ -81,6 +81,13 @@ class GeminiProvider(AIProvider):
 
     def _get_client(self) -> Any:
         """Lazily create and cache the Gemini SDK client."""
+        if not self._api_key or not self._api_key.strip():
+            raise AIProviderError(
+                kind=AIErrorKind.AUTH_ERROR,
+                provider=self.name,
+                message="No Gemini API key was provided. Set GEMINI_API_KEY in .env.",
+            )
+
         if self._client is None:
             try:
                 # SDK import is intentionally deferred here.
@@ -96,6 +103,12 @@ class GeminiProvider(AIProvider):
                         "Run: pip install google-genai"
                     ),
                 ) from exc
+            except Exception as exc:
+                raise AIProviderError(
+                    kind=AIErrorKind.AUTH_ERROR,
+                    provider=self.name,
+                    message=_safe_error_message(exc),
+                ) from exc
         return self._client
 
     async def generate(self, request: "AIRequest") -> AIResponse:
@@ -104,29 +117,29 @@ class GeminiProvider(AIProvider):
         Raises:
             AIProviderError: On any failure (auth, network, quota, …).
         """
-        client = self._get_client()
-
-        # Build content list (system message handled separately)
-        contents = _build_gemini_contents(request.messages)
-
-        # If no non-system messages, add the system_prompt as user turn
-        if not contents and request.system_prompt:
-            contents = [{"role": "user", "parts": [{"text": request.system_prompt}]}]
-
-        # Generation config
-        gen_config: dict[str, Any] = {}
-        if request.temperature is not None:
-            gen_config["temperature"] = request.temperature
-        if request.max_tokens is not None:
-            gen_config["max_output_tokens"] = request.max_tokens
-        if request.response_format:
-            gen_config["response_mime_type"] = "application/json"
-            # response_schema can be passed as a dict directly
-            gen_config["response_schema"] = request.response_format
-
-        model_id = request.model or self._model
-
         try:
+            client = self._get_client()
+
+            # Build content list (system message handled separately)
+            contents = _build_gemini_contents(request.messages)
+
+            # If no non-system messages, add the system_prompt as user turn
+            if not contents and request.system_prompt:
+                contents = [{"role": "user", "parts": [{"text": request.system_prompt}]}]
+
+            # Generation config
+            gen_config: dict[str, Any] = {}
+            if request.temperature is not None:
+                gen_config["temperature"] = request.temperature
+            if request.max_tokens is not None:
+                gen_config["max_output_tokens"] = request.max_tokens
+            if request.response_format:
+                gen_config["response_mime_type"] = "application/json"
+                # response_schema can be passed as a dict directly
+                gen_config["response_schema"] = request.response_format
+
+            model_id = request.model or self._model
+
             # Lazy import guard already ran via _get_client()
             from google.genai import types as genai_types  # type: ignore[import-untyped]
 
@@ -140,6 +153,8 @@ class GeminiProvider(AIProvider):
                 contents=contents,
                 config=config_obj,
             )
+        except AIProviderError:
+            raise
         except Exception as exc:
             kind = _classify_gemini_error(exc)
             raise AIProviderError(

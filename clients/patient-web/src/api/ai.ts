@@ -6,7 +6,7 @@ export interface AISessionCreatePayload {
 }
 
 export interface AIMessageCreatePayload {
-  content: string;
+  message: string;
 }
 
 export interface AIInterviewMessageResponse {
@@ -19,6 +19,10 @@ export interface AIInterviewMessageResponse {
   options?: string[];
   is_complete?: boolean;
   created_at?: string;
+  patient_message?: any;
+  ai_message?: any;
+  interview?: any;
+  clinical_history_updates?: any;
 }
 
 export const aiApi = {
@@ -35,21 +39,55 @@ export const aiApi = {
   },
 
   async completeSession(sessionId: string): Promise<AISession> {
-    const res = await api.post<AISession>(`/ai-sessions/${sessionId}/complete`);
-    return res.data;
+    try {
+      const res = await api.post<AISession>(`/ai-sessions/${sessionId}/complete`);
+      return res.data;
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        return await aiApi.getSession(sessionId);
+      }
+      throw err;
+    }
   },
 
-  async sendMessage(sessionId: string, content: string): Promise<AIInterviewMessageResponse> {
-    const res = await api.post<AIInterviewMessageResponse>(`/ai-sessions/${sessionId}/messages`, {
-      content,
+  async sendMessage(sessionId: string, message: string): Promise<AIInterviewMessageResponse> {
+    const res = await api.post<any>(`/ai-sessions/${sessionId}/messages`, {
+      message,
     });
-    return res.data;
+    const data = res.data;
+    const aiMsg = data.ai_message;
+    const interview = data.interview;
+    return {
+      ...data,
+      id: aiMsg?.id || data.id,
+      session_id: aiMsg?.ai_session_id || data.ai_session_id || sessionId,
+      role: (aiMsg?.sender === 'ai' ? 'ai' : 'assistant') as 'ai',
+      content: aiMsg?.message || interview?.next_question || data.content || data.message || '',
+      step: interview?.current_section || data.step || null,
+      current_step_label: interview?.current_section ? interview.current_section.replace(/_/g, ' ') : data.current_step_label || null,
+      options: data.options || [],
+      is_complete: interview?.interview_complete ?? data.is_complete ?? false,
+      created_at: aiMsg?.created_at || data.created_at,
+    };
   },
 
   async listMessages(sessionId: string, limit = 50, offset = 0): Promise<{ items: AIMessage[]; total: number }> {
-    const res = await api.get<{ items: AIMessage[]; total: number }>(`/ai-sessions/${sessionId}/messages`, {
+    const res = await api.get<{ items: any[]; total: number }>(`/ai-sessions/${sessionId}/messages`, {
       params: { limit, offset },
     });
-    return res.data;
+    const items = (res.data?.items || []).map((item: any) => ({
+      id: item.id,
+      session_id: item.ai_session_id || item.session_id || sessionId,
+      role: item.role || (item.sender === 'ai' ? 'ai' : 'patient'),
+      content: item.content || item.message || '',
+      step: item.step || null,
+      current_step_label: item.current_step_label || null,
+      options: item.options || [],
+      is_complete: item.is_complete || false,
+      created_at: item.created_at,
+    }));
+    return { items, total: res.data?.total ?? items.length };
   },
 };
+
+export default aiApi;

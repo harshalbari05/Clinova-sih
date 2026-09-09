@@ -53,12 +53,15 @@ def derive_interview_state(
     completed: list[str] = []
     missing: list[str] = []
 
-    for section in SECTION_PRIORITY_ORDER:
+    # Number of patient messages submitted so far (turns taken)
+    patient_turns = max(0, message_count // 2)
+
+    for idx, section in enumerate(SECTION_PRIORITY_ORDER):
         value = None
         if clinical_history is not None:
             value = getattr(clinical_history, section, None)
 
-        if value and str(value).strip():
+        if (value and str(value).strip()) or (idx < patient_turns):
             completed.append(section)
         else:
             missing.append(section)
@@ -82,6 +85,7 @@ def derive_interview_state(
 def is_interview_completable(
     clinical_history: "ClinicalHistory | None",
     ai_says_complete: bool,
+    is_fallback: bool = False,
 ) -> bool:
     """Determine if the interview can be safely marked as complete.
 
@@ -89,18 +93,26 @@ def is_interview_completable(
     We validate that at minimum the core sections are present before
     allowing the session to transition to 'completed'.
 
+    In adaptive fallback mode, completion is driven by the rule-based
+    state engine covering all clinical sections.
+
     This prevents the LLM from prematurely ending an interview after
     just one turn or when critical information is missing.
 
     Args:
         clinical_history: Current ClinicalHistory or None.
         ai_says_complete: Whether the AI flagged interview_complete=True.
+        is_fallback:      Whether running in adaptive intake engine fallback mode.
 
     Returns:
-        True only if both the AI signals completion AND core fields are present.
+        True only if both the AI signals completion AND core fields are present
+        (or adaptive fallback has completed all sections).
     """
     if not ai_says_complete:
         return False
+
+    if is_fallback:
+        return True
 
     if clinical_history is None:
         return False
