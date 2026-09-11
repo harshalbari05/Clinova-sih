@@ -170,17 +170,17 @@ export const InterviewScreen: React.FC = () => {
     }
   };
 
-  // 3. Mark session complete and proceed to document uploads
+  // 3. Mark session complete — show Clinical Summary (patient can upload docs separately from dashboard)
   const handleCompleteInterview = async () => {
     if (!session) return;
     try {
       setCompleting(true);
       await aiApi.completeSession(session.id);
       setIsCompleted(true);
-      navigation.navigate('DocumentUpload', { consultationId });
+      navigation.navigate('ClinicalSummary', { consultationId });
     } catch (err: any) {
-      // Even if session is already completed, allow proceeding
-      navigation.navigate('DocumentUpload', { consultationId });
+      // Even if session is already completed, show summary
+      navigation.navigate('ClinicalSummary', { consultationId });
     } finally {
       setCompleting(false);
     }

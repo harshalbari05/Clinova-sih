@@ -63,8 +63,9 @@ async def create_consultation(
     patient_id is taken from the authenticated patient object — never from
     client-supplied data — to prevent patient_id injection attacks.
     """
-    # Validate hospital exists before creating the consultation
-    await _assert_hospital_exists(db, payload.hospital_id)
+    # Validate hospital exists if provided before creating the consultation
+    if payload.hospital_id is not None:
+        await _assert_hospital_exists(db, payload.hospital_id)
 
     consultation = Consultation(
         patient_id=patient.id,  # always from JWT — never from client

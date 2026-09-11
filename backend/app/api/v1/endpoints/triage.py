@@ -78,6 +78,11 @@ async def _authorize_consultation_access(
     hospital_user = (await db.execute(hospital_user_stmt)).scalar_one_or_none()
 
     if hospital_user is not None:
+        if hospital_user.role == "receptionist":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Receptionist role is not authorized to access clinical triage data.",
+            )
         if consultation.hospital_id != hospital_user.hospital_id:
             # Safe 404: Do not leak cross-facility data
             raise HTTPException(

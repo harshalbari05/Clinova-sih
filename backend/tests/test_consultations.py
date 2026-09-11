@@ -411,3 +411,117 @@ async def test_get_consultation_unauthenticated(client: AsyncClient):
     fake_id = str(uuid.uuid4())
     res = await client.get(f"{CONSULTATIONS_URL}/{fake_id}")
     assert res.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Pre-Hospital Consultations: hospital_id omitted or null (SIH Demo Flow)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_create_consultation_without_hospital_id_omitted(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Authenticated patient can create a pre-hospital consultation with hospital_id omitted."""
+    token = await _register_and_login_patient(
+        client, email="prehospital.omitted@example.com", full_name="Pre-Hospital Patient"
+    )
+
+    payload = {
+        "chief_complaint": "Patient initiated AI interview from mobile dashboard",
+    }
+    res = await client.post(
+        CONSULTATIONS_URL,
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 201, res.text
+    data = res.json()
+
+    assert data["hospital_id"] is None
+    assert data["chief_complaint"] == "Patient initiated AI interview from mobile dashboard"
+    assert data["status"] == "initiated"
+    assert "id" in data
+    assert "patient_id" in data
+    assert "created_at" in data
+
+
+@pytest.mark.asyncio
+async def test_create_consultation_with_hospital_id_null(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Authenticated patient can create a consultation with hospital_id explicitly set to null."""
+    token = await _register_and_login_patient(
+        client, email="prehospital.null@example.com", full_name="Null Hospital Patient"
+    )
+
+    payload = {
+        "hospital_id": None,
+        "chief_complaint": "Fever and sore throat",
+    }
+    res = await client.post(
+        CONSULTATIONS_URL,
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 201, res.text
+    data = res.json()
+
+    assert data["hospital_id"] is None
+    assert data["chief_complaint"] == "Fever and sore throat"
+    assert data["status"] == "initiated"
+
+
+@pytest.mark.asyncio
+async def test_pre_hospital_consultation_can_start_ai_session_and_interview(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Scenario: Patient creates consultation without hospital_id -> AI interview session can use it."""
+    token = await _register_and_login_patient(
+        client, email="prehospital.aisession@example.com", full_name="AI Patient"
+    )
+
+    # 1. Create pre-hospital consultation (hospital_id omitted)
+    cons_res = await client.post(
+        CONSULTATIONS_URL,
+        json={"chief_complaint": "Persistent abdominal discomfort"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert cons_res.status_code == 201, cons_res.text
+    consultation = cons_res.json()
+    assert consultation["hospital_id"] is None
+    consultation_id = consultation["id"]
+
+    # 2. Create AI Session for this pre-hospital consultation
+    ai_session_url = f"/api/v1/consultations/{consultation_id}/ai-sessions"
+    session_res = await client.post(
+        ai_session_url,
+        json={"language": "English"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert session_res.status_code == 201, session_res.text
+    session_data = session_res.json()
+
+    assert session_data["consultation_id"] == consultation_id
+    assert session_data["language"] == "English"
+    assert session_data["status"] == "initiated"
+    session_id = session_data["id"]
+
+    # 3. Retrieve AI Session to verify persistence and ownership
+    get_session_res = await client.get(
+        f"/api/v1/ai-sessions/{session_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert get_session_res.status_code == 200, get_session_res.text
+    assert get_session_res.json()["id"] == session_id
+
+    # 4. Verify opening AI message exists in session
+    msgs_res = await client.get(
+        f"/api/v1/ai-sessions/{session_id}/messages",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert msgs_res.status_code == 200, msgs_res.text
+    msgs_data = msgs_res.json()
+    assert len(msgs_data["items"]) >= 1
+    assert msgs_data["items"][0]["sender"] == "ai"
+    assert "Clinova" in msgs_data["items"][0]["message"]

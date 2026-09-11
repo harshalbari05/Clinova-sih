@@ -12,6 +12,7 @@ import { SummaryTab } from '../components/consultation/SummaryTab';
 import { HistoryTab } from '../components/consultation/HistoryTab';
 import { TimelineTab } from '../components/consultation/TimelineTab';
 import { DocumentsTab } from '../components/consultation/DocumentsTab';
+import { useAuth } from '../context/AuthContext';
 import { DoctorReviewTab } from '../components/consultation/DoctorReviewTab';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { ErrorAlert } from '../components/common/ErrorAlert';
@@ -21,6 +22,7 @@ type TabType = 'summary' | 'history' | 'timeline' | 'documents' | 'review';
 export const ConsultationPage: React.FC = () => {
   const { id: consultationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hospitalRole } = useAuth();
 
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
@@ -30,6 +32,32 @@ export const ConsultationPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Privacy Rule: Receptionists are strictly forbidden from viewing clinical summaries & history
+  if (hospitalRole === 'receptionist') {
+    return (
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-8 text-center max-w-lg mx-auto my-12 shadow-xs space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center mx-auto border border-amber-200">
+          <span className="material-symbols-outlined text-[32px]">lock</span>
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-on-surface">Clinical Privacy Protection</h2>
+          <p className="text-xs text-on-surface-variant max-w-md">
+            Reception staff do not have authorization to view AI clinical summaries, patient histories, or consultation workspaces.
+          </p>
+        </div>
+        <div className="pt-2">
+          <button
+            onClick={() => navigate('/registration')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-xs hover:bg-primary-container transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+            <span>Return to Patient Registration</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const loadData = async () => {
     if (!consultationId) return;

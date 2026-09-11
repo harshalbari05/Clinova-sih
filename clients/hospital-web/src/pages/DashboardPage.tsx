@@ -9,7 +9,8 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { ErrorAlert } from '../components/common/ErrorAlert';
 
 export const DashboardPage: React.FC = () => {
-  const { user, hospital } = useAuth();
+  const { user, hospital, hospitalRole } = useAuth();
+  const isReceptionist = hospitalRole === 'receptionist';
   const navigate = useNavigate();
 
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -49,32 +50,32 @@ export const DashboardPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-white/20 text-white border border-white/25">
-                Active OPD Session
+                {isReceptionist ? 'Reception Desk' : 'Active OPD Session'}
               </span>
               <span className="text-xs text-white/75">• {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
             </div>
             <h1 className="text-2xl font-black tracking-tight">
-              Welcome, {user?.full_name || 'Dr. Amit Sharma'}
+              Welcome, {user?.full_name || (isReceptionist ? 'Reception Desk' : 'Dr. Amit Sharma')}
             </h1>
             <p className="text-xs text-teal-100 mt-1 max-w-xl">
-              {hospital?.name || 'Department of General Medicine & OPD Triage'} — Live patient intake with AI-assisted clinical summary & provenance verification.
+              {hospital?.name || 'Department of General Medicine & OPD Triage'} — {isReceptionist ? 'Patient intake, QR verification & visit registration desk.' : 'Live patient intake with AI-assisted clinical summary & provenance verification.'}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
-              onClick={fetchQueue}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-sm border border-white/15 transition-all"
+              onClick={() => navigate('/registration')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-primary text-xs font-bold shadow-md hover:bg-teal-50 transition-all"
             >
-              <span className="material-symbols-outlined text-sm">refresh</span>
-              Sync Queue
+              <span className="material-symbols-outlined text-sm">how_to_reg</span>
+              Register Patient
             </button>
             <button
               onClick={() => navigate('/queue')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-primary text-xs font-bold shadow-md hover:bg-teal-50 transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-sm border border-white/15 transition-all"
             >
               <span className="material-symbols-outlined text-sm">view_list</span>
-              Full OPD Queue
+              OPD Queue
             </button>
           </div>
         </div>
@@ -90,8 +91,40 @@ export const DashboardPage: React.FC = () => {
         completed={completedCount}
       />
 
-      {/* Spotlight: Next Patient in Queue */}
-      {nextPatient && (
+      {/* Spotlight: Reception Action or Doctor Next Patient */}
+      {isReceptionist ? (
+        <div className="bg-white rounded-2xl border border-primary/30 p-5 shadow-sm hover:border-primary transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                <span className="material-symbols-outlined text-[26px]">how_to_reg</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-primary uppercase tracking-wider">Fast Intake</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    Desk Active
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900 mt-0.5">
+                  Register Arriving Outpatients
+                </h3>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Scan Clinova patient QR or enter walk-in details to route patients to OPD departments.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate('/registration')}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-xs font-bold shadow-md shadow-primary/25 transition-all"
+            >
+              <span>Open Registration Desk</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      ) : nextPatient ? (
         <div className="bg-white rounded-2xl border border-teal-200 p-5 shadow-sm hover:border-primary transition-all">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
@@ -125,7 +158,7 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Recent OPD Queue Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
@@ -150,7 +183,7 @@ export const DashboardPage: React.FC = () => {
         ) : (
           <QueueTable
             consultations={consultations.slice(0, 10)}
-            onSelectConsultation={(c: Consultation) => navigate(`/consultation/${c.id}`)}
+            onSelectConsultation={!isReceptionist ? (c: Consultation) => navigate(`/consultation/${c.id}`) : undefined}
           />
         )}
       </div>

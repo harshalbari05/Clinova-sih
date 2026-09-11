@@ -5,27 +5,28 @@ import { RootStackParamList } from './types';
 import { usePatient } from '../context/PatientContext';
 import colors from '../theme/colors';
 
-// Auth Screens
+// Pre-Auth & Consultation Screens
+import {
+  OnboardingLanguageScreen,
+  ConsentScreen,
+  HospitalSelectScreen,
+  LanguageSelectScreen,
+  InterviewScreen,
+} from '../screens/Consultation';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
-
-// Main Intake & Dashboard Screens
 import HomeScreen from '../screens/Dashboard/HomeScreen';
-import HospitalSelectScreen from '../screens/Consultation/HospitalSelectScreen';
-import ConsentScreen from '../screens/Consultation/ConsentScreen';
-import LanguageSelectScreen from '../screens/Consultation/LanguageSelectScreen';
-import InterviewScreen from '../screens/Consultation/InterviewScreen';
 import DocumentUploadScreen from '../screens/Documents/DocumentUploadScreen';
 import DocumentListScreen from '../screens/Documents/DocumentListScreen';
 import DocumentExtractionScreen from '../screens/Documents/DocumentExtractionScreen';
 import TimelineScreen from '../screens/Timeline/TimelineScreen';
 import ClinicalSummaryScreen from '../screens/Summary/ClinicalSummaryScreen';
-import ProfileScreen from '../screens/Profile/ProfileScreen';
+import { PatientQRScreen, ProfileScreen } from '../screens/Profile';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading } = usePatient();
+  const { isAuthenticated, isLoading, consentGiven } = usePatient();
 
   if (isLoading) {
     return (
@@ -44,17 +45,22 @@ export const RootNavigator: React.FC = () => {
       }}
     >
       {!isAuthenticated ? (
-        // Auth Stack
+        // Pre-Auth Stack: Language → Login / Register
         <Stack.Group>
+          <Stack.Screen name="OnboardingLanguage" component={OnboardingLanguageScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
         </Stack.Group>
+      ) : !consentGiven ? (
+        // Consent Gate: shown once after first login
+        <Stack.Group>
+          <Stack.Screen name="Consent" component={ConsentScreen} />
+        </Stack.Group>
       ) : (
-        // Authenticated Protected Patient Stack
+        // Authenticated & Consented — Full Patient Stack
         <Stack.Group>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="HospitalSelect" component={HospitalSelectScreen} />
-          <Stack.Screen name="Consent" component={ConsentScreen} />
           <Stack.Screen name="LanguageSelect" component={LanguageSelectScreen} />
           <Stack.Screen name="Interview" component={InterviewScreen} />
           <Stack.Screen name="DocumentUpload" component={DocumentUploadScreen} />
@@ -62,6 +68,7 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen name="DocumentExtraction" component={DocumentExtractionScreen} />
           <Stack.Screen name="Timeline" component={TimelineScreen} />
           <Stack.Screen name="ClinicalSummary" component={ClinicalSummaryScreen} />
+          <Stack.Screen name="PatientQR" component={PatientQRScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Group>
       )}

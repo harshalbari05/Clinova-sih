@@ -2,7 +2,7 @@ import api from './client';
 import { ConsentRecord, Consultation, ConsultationListResponse } from '../types';
 
 export interface ConsultationCreatePayload {
-  hospital_id: string;
+  hospital_id?: string; // optional — assigned later at hospital reception
   chief_complaint?: string;
 }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Consultation } from '../../types/consultation';
 import { StatusBadge, PriorityBadge } from '../common/Badge';
+import { useOptionalAuth } from '../../context/AuthContext';
 
 interface QueueTableProps {
   consultations: Consultation[];
@@ -15,6 +16,8 @@ export const QueueTable: React.FC<QueueTableProps> = ({
   onSelectConsultation,
 }) => {
   const navigate = useNavigate();
+  const auth = useOptionalAuth();
+  const isReceptionist = auth?.hospitalRole === 'receptionist';
 
   if (isLoading) {
     return (
@@ -78,25 +81,42 @@ export const QueueTable: React.FC<QueueTableProps> = ({
           </thead>
           <tbody className="divide-y divide-outline-variant/10 text-sm">
             {consultations.map((c, index) => {
-              const tokenNum = index + 1;
+              const tokenNum = c.token_number != null ? c.token_number : index + 1;
               const patientShortId = c.patient_id.slice(0, 8);
 
               return (
                 <tr
                   key={c.id}
-                  className="hover:bg-surface-container-low/60 transition-colors cursor-pointer group"
-                  onClick={() => (onSelectConsultation ? onSelectConsultation(c) : navigate(`/consultation/${c.id}`))}
+                  className={`hover:bg-surface-container-low/60 transition-colors group ${
+                    isReceptionist ? 'cursor-default' : 'cursor-pointer'
+                  }`}
+                  onClick={() => {
+                    if (!isReceptionist) {
+                      if (onSelectConsultation) {
+                        onSelectConsultation(c);
+                      } else {
+                        navigate(`/consultation/${c.id}`);
+                      }
+                    }
+                  }}
                 >
                   {/* Token & Patient Identifier */}
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center font-black text-sm shrink-0 border border-primary/20">
                         #{tokenNum}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-on-surface truncate group-hover:text-primary transition-colors">
-                          Patient #{patientShortId}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-on-surface truncate group-hover:text-primary transition-colors">
+                            Patient #{patientShortId}
+                          </span>
+                          {c.department && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">
+                              {c.department}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[11px] text-on-surface-variant">
                           Case #{c.id.slice(0, 8)}
                         </span>
@@ -131,14 +151,21 @@ export const QueueTable: React.FC<QueueTableProps> = ({
 
                   {/* Action Button */}
                   <td className="py-4 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => (onSelectConsultation ? onSelectConsultation(c) : navigate(`/consultation/${c.id}`))}
-                      className="px-3.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-semibold text-xs transition-colors shadow-xs inline-flex items-center gap-1.5"
-                      type="button"
-                    >
-                      <span>Open Case</span>
-                      <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-                    </button>
+                    {isReceptionist ? (
+                      <span className="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant text-xs font-semibold inline-flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px] text-primary">check</span>
+                        <span>Registered</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => (onSelectConsultation ? onSelectConsultation(c) : navigate(`/consultation/${c.id}`))}
+                        className="px-3.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-semibold text-xs transition-colors shadow-xs inline-flex items-center gap-1.5"
+                        type="button"
+                      >
+                        <span>Open Case</span>
+                        <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

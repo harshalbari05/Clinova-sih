@@ -66,7 +66,7 @@ class ClinicalContextAssembler:
 
         consultation_data: dict[str, Any] = {
             "id": str(consultation.id),
-            "hospital_id": str(consultation.hospital_id),
+            "hospital_id": str(consultation.hospital_id) if consultation.hospital_id else None,
             "chief_complaint": consultation.chief_complaint,
             "status": consultation.status,
             "started_at": (

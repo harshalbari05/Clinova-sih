@@ -28,8 +28,9 @@ class ConsultationCreate(BaseModel):
     JWT to prevent any client-side patient_id injection.
     """
 
-    hospital_id: uuid.UUID
+    hospital_id: uuid.UUID | None = None
     chief_complaint: str | None = Field(default=None, max_length=2000)
+    department: str | None = Field(default=None, max_length=100)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,9 +40,11 @@ class ConsultationResponse(BaseModel):
 
     id: uuid.UUID
     patient_id: uuid.UUID
-    hospital_id: uuid.UUID
+    hospital_id: uuid.UUID | None = None
     status: str
     chief_complaint: str | None = None
+    department: str | None = None
+    token_number: int | None = None
     started_at: datetime | None = None
     completed_at: datetime | None = None
     created_at: datetime

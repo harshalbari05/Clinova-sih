@@ -1,3 +1,10 @@
+/**
+ * ConsentScreen
+ *
+ * Shown once after first login, before the patient reaches the dashboard.
+ * Does NOT require hospital selection — consent is a patient-level agreement.
+ * Hospital assignment happens later at the hospital reception.
+ */
 import React, { useState } from 'react';
 import {
   View,
@@ -5,26 +12,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProp, ScreenRouteProp } from '../../navigation/types';
 import { usePatient } from '../../context/PatientContext';
-import { consultationApi } from '../../api';
 import colors from '../../theme/colors';
 import { borderRadius, spacing } from '../../theme/spacing';
-import Header from '../../components/Header';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import StepIndicator from '../../components/StepIndicator';
 
 export const ConsentScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp<'Consent'>>();
-  const route = useRoute<ScreenRouteProp<'Consent'>>();
-  const { hospitalId } = route.params;
-
-  const { selectedHospital, setActiveConsultation, setConsentGiven } = usePatient();
+  const { setConsentGiven, patient, logout } = usePatient();
 
   const [hasAgreed, setHasAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +29,7 @@ export const ConsentScreen: React.FC = () => {
 
   const handleGrantConsent = async () => {
     if (!hasAgreed) {
-      setError('You must explicitly check the informed consent box to proceed.');
+      setError('कृपया सहमति बॉक्स चेक करें / Please check the consent box to continue.');
       return;
     }
 
@@ -40,49 +37,45 @@ export const ConsentScreen: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // 1. Create the consultation session
-      const consultation = await consultationApi.createConsultation({
-        hospital_id: hospitalId,
-        chief_complaint: 'Clinical intake consultation',
-      });
-
-      // 2. Record explicit patient consent in backend
-      await consultationApi.recordConsent(consultation.id, {
-        consent_given: true,
-        consent_type: 'clinical_intake',
-      });
-
-      await setActiveConsultation(consultation);
+      // Record consent in SecureStore — consultation creation happens later
+      // when patient manually starts "Talk to Clinova" from the dashboard.
       await setConsentGiven(true);
 
-      // 3. Move to language selection
-      navigation.navigate('LanguageSelect', { consultationId: consultation.id });
+      // Navigation is handled automatically by RootNavigator:
+      // consentGiven = true → renders the full authenticated stack (Home).
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Failed to record consent. Please try again.';
-      setError(msg);
+      setError('Unable to record consent. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDecline = async () => {
+    // Patient declined — log them out so they can reconsider
+    await logout();
+  };
+
   return (
     <View style={styles.container}>
-      <Header title="Patient Informed Consent" onBack={() => navigation.goBack()} />
-      <StepIndicator currentStep={2} />
+      {/* Header — no back button (consent is a required gate) */}
+      <View style={styles.header}>
+        <View style={styles.headerBrandRow}>
+          <View style={styles.brandBadge}>
+            <Text style={styles.brandBadgeText}>+</Text>
+          </View>
+          <Text style={styles.brandName}>Clinova</Text>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          Welcome, {patient?.full_name || 'Patient'}
+        </Text>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Card elevated style={styles.card}>
           <View style={styles.headerRow}>
-            <Ionicons name="shield-checkmark-outline" size={28} color={colors.primary} />
-            <Text style={styles.cardTitle}>Informed Consent for Clinical Intake</Text>
+            <Ionicons name="shield-checkmark-outline" size={30} color={colors.primary} />
+            <Text style={styles.cardTitle}>Patient Informed Consent</Text>
           </View>
-
-          <Text style={styles.hospitalNotice}>
-            Facility:{' '}
-            <Text style={{ fontWeight: '700' }}>
-              {selectedHospital?.name || 'Selected Hospital'}
-            </Text>
-          </Text>
 
           {error && (
             <View style={styles.errorBox}>
@@ -91,42 +84,44 @@ export const ConsentScreen: React.FC = () => {
           )}
 
           <View style={styles.section}>
-            <Text style={styles.sectionHeading}>1. Purpose of Clinical Intake</Text>
+            <Text style={styles.sectionHeading}>1. What Clinova Does</Text>
             <Text style={styles.sectionText}>
-              Clinova gathers your medical symptoms, relevant health history, and uploaded
-              documents ahead of your consultation to assist your physician in preparing a high-quality
-              clinical overview.
+              Clinova helps you record your health symptoms, medical history, and
+              documents so your doctor can prepare better for your visit. The AI
+              assistant asks simple questions and creates a health summary.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionHeading}>2. Information Collected</Text>
             <Text style={styles.sectionText}>
-              • Chief complaints and duration of symptoms.{'\n'}
-              • Medical history, medications, allergies, and prior procedures.{'\n'}
-              • Uploaded documents (prescriptions, laboratory reports, discharge summaries).{'\n'}
-              • Demographic data and contact numbers.
+              • Your health symptoms and duration{'\n'}
+              • Medical history, medicines, allergies{'\n'}
+              • Uploaded prescriptions and reports{'\n'}
+              • Your name and contact number
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionHeading}>3. AI Assisting & Non-Diagnostic Role</Text>
+            <Text style={styles.sectionHeading}>3. AI is Not a Doctor</Text>
             <Text style={styles.sectionText}>
-              AI interview and OCR services summarize facts objectively. The AI engine{' '}
-              <Text style={{ fontWeight: '700' }}>does NOT</Text> provide medical diagnoses or prescribe
-              treatments. All summaries remain drafts until reviewed and approved by a qualified physician.
+              The Clinova AI does{' '}
+              <Text style={{ fontWeight: '700' }}>NOT</Text> diagnose diseases or
+              prescribe medicines. It only helps summarise your information for
+              your doctor.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionHeading}>4. Data Security & Patient Rights</Text>
+            <Text style={styles.sectionHeading}>4. Your Privacy</Text>
             <Text style={styles.sectionText}>
-              Your information is encrypted, isolated to your affiliated hospital healthcare team, and never
-              sold or shared for advertising. You may decline or revoke consent at any time.
+              Your data is encrypted and only shared with your treating healthcare
+              team. It is never sold or used for advertising. You can withdraw
+              consent at any time from your profile.
             </Text>
           </View>
 
-          {/* Explicit Consent Checkbox */}
+          {/* Large consent checkbox — accessible touch target */}
           <TouchableOpacity
             style={styles.checkboxRow}
             activeOpacity={0.8}
@@ -134,18 +129,23 @@ export const ConsentScreen: React.FC = () => {
               setHasAgreed(!hasAgreed);
               setError(null);
             }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: hasAgreed }}
+            accessibilityLabel="I agree to the Clinova informed consent"
           >
             <View style={[styles.checkbox, hasAgreed && styles.checkboxChecked]}>
-              {hasAgreed && <Ionicons name="checkmark" size={16} color={colors.onPrimary} />}
+              {hasAgreed && <Ionicons name="checkmark" size={20} color={colors.onPrimary} />}
             </View>
             <Text style={styles.checkboxLabel}>
-              I have read, understood, and explicitly grant consent for pre-consultation clinical
-              intake and AI-assisted data processing.
+              मैं सहमत हूं / मी सहमत आहे{'\n'}
+              <Text style={styles.checkboxLabelEn}>
+                I agree to the informed consent for AI-assisted clinical intake.
+              </Text>
             </Text>
           </TouchableOpacity>
 
           <Button
-            title="Grant Consent & Continue"
+            title="हां, मैं सहमत हूं — Proceed"
             onPress={handleGrantConsent}
             loading={loading}
             disabled={!hasAgreed}
@@ -153,9 +153,9 @@ export const ConsentScreen: React.FC = () => {
           />
 
           <Button
-            title="Cancel & Exit"
+            title="Decline & Sign Out"
             variant="outline"
-            onPress={() => navigation.goBack()}
+            onPress={handleDecline}
             style={{ marginTop: spacing.sm }}
           />
         </Card>
@@ -169,6 +169,46 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
   },
+  header: {
+    alignItems: 'center',
+    paddingTop: spacing.xl + 8,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerBrandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  brandBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs,
+  },
+  brandBadgeText: {
+    color: colors.onPrimary,
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 26,
+  },
+  brandName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
   scrollContent: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
@@ -179,19 +219,14 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.onSurface,
-    marginLeft: spacing.xs + 2,
+    marginLeft: spacing.sm,
     flex: 1,
-  },
-  hospitalNotice: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
   },
   errorBox: {
     backgroundColor: colors.errorContainer,
@@ -211,12 +246,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.primary,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   sectionText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.onSurfaceVariant,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -225,11 +260,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.md,
     marginVertical: spacing.md,
+    minHeight: 72,
   },
   checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     borderWidth: 2,
     borderColor: colors.primary,
     alignItems: 'center',
@@ -237,19 +273,26 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
     marginTop: 2,
     backgroundColor: colors.surfaceContainerLowest,
+    flexShrink: 0,
   },
   checkboxChecked: {
     backgroundColor: colors.primary,
   },
   checkboxLabel: {
-    fontSize: 13,
+    fontSize: 15,
     color: colors.onSurface,
     flex: 1,
-    lineHeight: 18,
-    fontWeight: '500',
+    lineHeight: 22,
+    fontWeight: '600',
+  },
+  checkboxLabelEn: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: colors.textSecondary,
   },
   actionBtn: {
     marginTop: spacing.sm,
+    paddingVertical: spacing.md,
   },
 });
 

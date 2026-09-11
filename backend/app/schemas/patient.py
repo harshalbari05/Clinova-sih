@@ -4,14 +4,15 @@ Reuses PatientProfileResponse from auth.py for read operations.
 Defines a separate update schema for profile modification.
 """
 
-from datetime import date
+import uuid
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 # Re-export so consumers can import from one place when dealing with patients.
 from app.schemas.auth import PatientProfileResponse as PatientResponse
 
-__all__ = ["PatientProfileUpdate", "PatientResponse"]
+__all__ = ["ActiveVisitResponse", "PatientProfileUpdate", "PatientResponse"]
 
 
 class PatientProfileUpdate(BaseModel):
@@ -30,3 +31,21 @@ class PatientProfileUpdate(BaseModel):
     emergency_contact: str | None = Field(default=None, max_length=255)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ActiveVisitResponse(BaseModel):
+    """Real-time active hospital visit and token information for a patient."""
+
+    has_active_visit: bool
+    consultation_id: uuid.UUID | None = None
+    hospital_id: uuid.UUID | None = None
+    hospital_name: str | None = None
+    department: str | None = None
+    token_number: int | None = None
+    now_serving: int | None = None
+    people_ahead: int = 0
+    status: str | None = None  # "waiting", "in_progress", "completed"
+    checkin_time: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+

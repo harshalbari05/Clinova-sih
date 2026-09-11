@@ -2,6 +2,8 @@ export interface Consultation {
   id: string;
   patient_id: string;
   hospital_id: string;
+  department?: string | null;
+  token_number?: number | null;
   status: 'initiated' | 'in_progress' | 'completed' | 'reviewed' | 'cancelled' | string;
   chief_complaint: string | null;
   started_at: string | null;

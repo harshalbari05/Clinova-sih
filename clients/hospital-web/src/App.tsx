@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { HospitalLayout } from './components/layout/HospitalLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { RegistrationPage } from './pages/RegistrationPage';
 import { QueuePage } from './pages/QueuePage';
 import { ConsultationPage } from './pages/ConsultationPage';
 import { DocumentsPage } from './pages/DocumentsPage';
@@ -28,6 +29,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+const RootRedirect: React.FC = () => {
+  const { hospitalRole } = useAuth();
+  return <Navigate to={hospitalRole === 'receptionist' ? '/registration' : '/dashboard'} replace />;
+};
+
 export const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -45,8 +51,9 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<RootRedirect />} />
             <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="registration" element={<RegistrationPage />} />
             <Route path="queue" element={<QueuePage />} />
             <Route path="consultation/:id" element={<ConsultationPage />} />
             <Route path="documents" element={<DocumentsPage />} />

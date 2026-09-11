@@ -393,6 +393,11 @@ class ClinicalSummaryService:
         hospital_user = (await db.execute(h_stmt)).scalar_one_or_none()
 
         if hospital_user is not None:
+            if hospital_user.role == "receptionist":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Receptionist role is not authorized to access clinical summaries.",
+                )
             if consultation.hospital_id != hospital_user.hospital_id:
                 # Cross-hospital access -> safe 404
                 raise HTTPException(

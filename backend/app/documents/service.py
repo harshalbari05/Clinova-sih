@@ -435,6 +435,11 @@ class MedicalDocumentService:
         h_user = (await db.execute(h_stmt)).scalar_one_or_none()
 
         if h_user is not None:
+            if h_user.role == "receptionist":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Receptionist role is not authorized to access medical documents.",
+                )
             # If doc is attached to a consultation, must match hospital facility
             if doc.consultation_id is not None:
                 c_stmt = select(Consultation).where(Consultation.id == doc.consultation_id)
@@ -506,6 +511,11 @@ class MedicalDocumentService:
         h_user = (await db.execute(h_stmt)).scalar_one_or_none()
 
         if h_user is not None:
+            if h_user.role == "receptionist":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Receptionist role is not authorized to access medical documents.",
+                )
             if consultation_id is None:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

@@ -55,7 +55,7 @@ class ConsultationTimelineBuilder:
                     source_page=None,
                     verification_status="SOURCE_CONFIRMED",
                     metadata={
-                        "hospital_id": str(cons.hospital_id),
+                        "hospital_id": str(cons.hospital_id) if cons.hospital_id else None,
                         "status": cons.status,
                     },
                 )

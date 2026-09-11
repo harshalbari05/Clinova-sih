@@ -1,3 +1,10 @@
+/**
+ * LanguageSelectScreen
+ *
+ * Used when the patient starts "Talk to Clinova" from the dashboard.
+ * consultationId is required in this context (interview is about to start).
+ * Language is persisted so future sessions default to the same language.
+ */
 import React, { useState } from 'react';
 import {
   View,
@@ -15,7 +22,6 @@ import { borderRadius, spacing } from '../../theme/spacing';
 import Header from '../../components/Header';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import StepIndicator from '../../components/StepIndicator';
 
 interface LanguageOption {
   code: string;
@@ -48,28 +54,35 @@ const LANGUAGES: LanguageOption[] = [
 export const LanguageSelectScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<'LanguageSelect'>>();
   const route = useRoute<ScreenRouteProp<'LanguageSelect'>>();
-  const { consultationId } = route.params;
+  const consultationId = route.params?.consultationId;
 
   const { language, setLanguage } = usePatient();
   const [selected, setSelected] = useState<string>(language || 'English');
 
   const handleContinue = async () => {
     await setLanguage(selected);
-    navigation.navigate('Interview', {
-      consultationId,
-      language: selected,
-    });
+
+    if (consultationId) {
+      // Interview flow — navigate directly to interview
+      navigation.navigate('Interview', {
+        consultationId,
+        language: selected,
+      });
+    } else {
+      // Should not happen in normal flow (consultationId always present here)
+      navigation.goBack();
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Header title="Choose Language" onBack={() => navigation.goBack()} />
-      <StepIndicator currentStep={3} />
+      <Header title="Interview Language" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.screenTitle}>Select Interview Language</Text>
+        <Text style={styles.screenTitle}>भाषा चुनें / Choose Language</Text>
         <Text style={styles.screenSubtitle}>
-          Choose your preferred language for the AI-guided clinical intake questions and responses.
+          Select the language for your AI clinical interview. Clinova will ask
+          you health questions in the chosen language.
         </Text>
 
         {LANGUAGES.map((item) => {
@@ -79,6 +92,9 @@ export const LanguageSelectScreen: React.FC = () => {
               key={item.code}
               activeOpacity={0.8}
               onPress={() => setSelected(item.code)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${item.name} — ${item.nativeName}`}
             >
               <Card
                 style={[
@@ -109,7 +125,7 @@ export const LanguageSelectScreen: React.FC = () => {
         })}
 
         <Button
-          title="Continue to AI Interview"
+          title="Start Interview / इंटरव्यू शुरू करें"
           onPress={handleContinue}
           style={styles.continueBtn}
         />
@@ -153,14 +169,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   radioCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.textMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+    flexShrink: 0,
   },
   radioCircleSelected: {
     borderColor: colors.primary,
@@ -179,7 +196,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   langName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     color: colors.onSurface,
   },
@@ -187,7 +204,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   langNativeName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.textSecondary,
     marginLeft: 6,
@@ -199,6 +216,7 @@ const styles = StyleSheet.create({
   },
   continueBtn: {
     marginTop: spacing.lg,
+    paddingVertical: spacing.md,
   },
 });
 

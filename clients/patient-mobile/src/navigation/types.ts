@@ -5,21 +5,25 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 
 export type RootStackParamList = {
-  // Auth Screens
+  // Pre-Auth Screens
+  OnboardingLanguage: undefined;
   Login: undefined;
   Register: undefined;
 
-  // Main Patient Intake & Care Flow
+  // Consent (standalone — not tied to hospital)
+  Consent: undefined;
+
+  // Main Patient Dashboard & Care Flow
   Home: undefined;
-  HospitalSelect: undefined;
-  Consent: { hospitalId: string };
-  LanguageSelect: { consultationId: string };
+  HospitalSelect: undefined; // kept for future hospital-side use, removed from onboarding
+  LanguageSelect: { consultationId?: string }; // consultationId optional — absent = interview setup flow
   Interview: { consultationId: string; language?: string };
   DocumentList: { consultationId?: string };
   DocumentUpload: { consultationId?: string };
   DocumentExtraction: { documentId: string };
   Timeline: undefined;
   ClinicalSummary: { consultationId: string };
+  PatientQR: undefined;
   Profile: undefined;
 };
 

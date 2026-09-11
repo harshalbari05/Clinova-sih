@@ -74,4 +74,31 @@ describe('Hospital Directory & Consultation Services', () => {
     expect(result.granted).toBe(true);
     expect(result.consent_type).toBe('clinical_intake');
   });
+
+  it('retrieves active hospital visit and token for patient', async () => {
+    const mockVisit = {
+      has_active_visit: true,
+      consultation_id: 'cons-123',
+      hospital_id: 'hosp-1',
+      hospital_name: 'Clinova General Hospital',
+      department: 'General Medicine',
+      token_number: 27,
+      now_serving: 24,
+      people_ahead: 2,
+      status: 'waiting',
+      checkin_time: '2026-09-11T10:00:00Z',
+    };
+
+    const { patientApi } = require('../api/patients');
+    (api.get as jest.Mock).mockResolvedValueOnce({ data: mockVisit });
+
+    const result = await patientApi.getActiveVisit();
+    expect(api.get).toHaveBeenCalledWith('/patients/me/active-visit');
+    expect(result.has_active_visit).toBe(true);
+    expect(result.token_number).toBe(27);
+    expect(result.department).toBe('General Medicine');
+    expect(result.now_serving).toBe(24);
+    expect(result.people_ahead).toBe(2);
+  });
 });
+

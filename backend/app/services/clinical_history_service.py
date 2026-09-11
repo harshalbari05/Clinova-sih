@@ -129,6 +129,11 @@ async def _authorize_consultation_read(
     h_stmt = select(HospitalUser).where(HospitalUser.user_id == user.id)
     h_user = (await db.execute(h_stmt)).scalar_one_or_none()
     if h_user is not None:
+        if h_user.role == "receptionist":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Receptionist role is not authorized to access clinical history.",
+            )
         if consultation.hospital_id != h_user.hospital_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

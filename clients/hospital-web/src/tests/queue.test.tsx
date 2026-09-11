@@ -72,4 +72,32 @@ describe('OPD Queue Components', () => {
     fireEvent.click(openBtns[0]);
     expect(onSelect).toHaveBeenCalledWith(mockConsultations[0]);
   });
+
+  it('renders queue table with explicit department token_number and badge', () => {
+    const mockConsultations: Consultation[] = [
+      {
+        id: 'c-201-uuid',
+        patient_id: 'p-rohan-uuid',
+        hospital_id: 'h-1-uuid',
+        department: 'General Medicine',
+        token_number: 27,
+        status: 'initiated',
+        chief_complaint: 'Fever and cold',
+        started_at: null,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+
+    render(
+      <BrowserRouter>
+        <QueueTable consultations={mockConsultations} />
+      </BrowserRouter>
+    );
+
+    expect(screen.getByText('#27')).toBeInTheDocument();
+    expect(screen.getByText('General Medicine')).toBeInTheDocument();
+  });
 });
+

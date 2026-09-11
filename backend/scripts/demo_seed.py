@@ -54,12 +54,27 @@ logger = logging.getLogger("clinova.demo_seed")
 DEMO_HOSPITAL_REG = "REG-DEMO-001"
 DEMO_HOSPITAL_EMAIL = "opd@demohospital.org"
 DEMO_DOCTOR_EMAIL = "doctor@demohospital.org"
+DEMO_RECEPTIONIST_EMAIL = "reception@demohospital.org"
 DEMO_PATIENT_A_EMAIL = "rohan.patil@example.com"
 DEMO_PATIENT_A_ABHA = "91-4521-8890-1234"
 DEMO_PATIENT_B_EMAIL = "ananya.d@example.com"
 DEMO_PATIENT_B_ABHA = "91-6789-1122-3344"
 
-DEMO_EMAILS = [DEMO_DOCTOR_EMAIL, DEMO_PATIENT_A_EMAIL, DEMO_PATIENT_B_EMAIL]
+DEMO_QUEUE_EMAILS = [
+    "queue_gm_24@clinova.demo",
+    "queue_gm_25@clinova.demo",
+    "queue_gm_26@clinova.demo",
+    "queue_ortho_11@clinova.demo",
+    "queue_ortho_12@clinova.demo",
+]
+
+DEMO_EMAILS = [
+    DEMO_DOCTOR_EMAIL,
+    DEMO_RECEPTIONIST_EMAIL,
+    DEMO_PATIENT_A_EMAIL,
+    DEMO_PATIENT_B_EMAIL,
+    *DEMO_QUEUE_EMAILS,
+]
 
 
 async def reset_demo_data(session: AsyncSession) -> None:
@@ -143,6 +158,29 @@ async def seed_demo_data(session: AsyncSession) -> dict[str, Any]:
         await session.flush()
         logger.info("Created Attending Physician: %s", doc_user.email)
 
+    # Receptionist User
+    rec_stmt = select(User).where(User.email == DEMO_RECEPTIONIST_EMAIL)
+    rec_user = (await session.execute(rec_stmt)).scalar_one_or_none()
+    if not rec_user:
+        rec_user = User(
+            email=DEMO_RECEPTIONIST_EMAIL,
+            phone="+91 98200 99887",
+            password_hash=hash_password("ReceptionPass123!"),
+            role="receptionist",
+            is_active=True,
+        )
+        session.add(rec_user)
+        await session.flush()
+
+        rec_hosp_user = HospitalUser(
+            user_id=rec_user.id,
+            hospital_id=hospital.id,
+            role="receptionist",
+        )
+        session.add(rec_hosp_user)
+        await session.flush()
+        logger.info("Created Hospital Receptionist: %s", rec_user.email)
+
     # -------------------------------------------------------------
     # 2. Patient A: Rohan Patil (Standard Complete Flow)
     # -------------------------------------------------------------
@@ -175,18 +213,19 @@ async def seed_demo_data(session: AsyncSession) -> dict[str, Any]:
     else:
         patient_a = (await session.execute(select(Patient).where(Patient.user_id == user_a.id))).scalar_one()
 
-    # Consultation A
+    # Consultation A (Pre-Hospital Patient Intake Scenario for Rohan Patil)
     con_a_stmt = select(Consultation).where(
         Consultation.patient_id == patient_a.id,
-        Consultation.hospital_id == hospital.id,
     )
     con_a = (await session.execute(con_a_stmt)).scalars().first()
 
     if not con_a:
         con_a = Consultation(
             patient_id=patient_a.id,
-            hospital_id=hospital.id,
-            status="in_progress",
+            hospital_id=None,
+            department=None,
+            token_number=None,
+            status="initiated",
             chief_complaint="Persistent dry cough and mild evening fever for 5 days",
             started_at=now - timedelta(minutes=45),
         )
@@ -522,6 +561,91 @@ async def seed_demo_data(session: AsyncSession) -> dict[str, Any]:
         session.add(summary_b)
         logger.info("Seeded Consultation B (Red Flag): Ananya Deshmukh (Encounter: #%s)", str(con_b.id)[:8].upper())
 
+    # -------------------------------------------------------------
+    # 4. Department OPD Queues (General Medicine & Orthopedics)
+    # -------------------------------------------------------------
+    # General Medicine tokens: 24 (Now Serving), 25 (Waiting), 26 (Waiting)
+    # When Rohan registers, he receives Token 27!
+    gm_queue_data = [
+        ("queue_gm_24@clinova.demo", "Suresh Mehta", "Male", 48, 24, "in_progress", "Hypertension & dizziness follow-up", now - timedelta(minutes=20)),
+        ("queue_gm_25@clinova.demo", "Kavita Rao", "Female", 32, 25, "initiated", "Throat irritation and voice hoarseness", now - timedelta(minutes=15)),
+        ("queue_gm_26@clinova.demo", "Deepak Verma", "Male", 29, 26, "initiated", "Mild viral fever and body aches", now - timedelta(minutes=10)),
+    ]
+    for q_email, q_name, q_gender, q_age, q_token, q_status, q_complaint, q_time in gm_queue_data:
+        q_user = (await session.execute(select(User).where(User.email == q_email))).scalar_one_or_none()
+        if not q_user:
+            q_user = User(
+                email=q_email,
+                phone=f"98000000{q_token}",
+                password_hash=hash_password("DemoQueuePass1!"),
+                role="patient",
+                is_active=True,
+            )
+            session.add(q_user)
+            await session.flush()
+            q_patient = Patient(
+                user_id=q_user.id,
+                full_name=q_name,
+                gender=q_gender,
+                date_of_birth=date(today.year - q_age, 1, 1),
+                phone=f"98000000{q_token}",
+            )
+            session.add(q_patient)
+            await session.flush()
+            q_cons = Consultation(
+                patient_id=q_patient.id,
+                hospital_id=hospital.id,
+                department="General Medicine",
+                token_number=q_token,
+                status=q_status,
+                chief_complaint=q_complaint,
+                started_at=q_time if q_status == "in_progress" else None,
+                created_at=q_time,
+            )
+            session.add(q_cons)
+            await session.flush()
+
+    # Orthopedics tokens: 11 (Now Serving in Ortho), 12 (Waiting)
+    ortho_queue_data = [
+        ("queue_ortho_11@clinova.demo", "Manoj Joshi", "Male", 41, 11, "in_progress", "Right ankle twisting injury", now - timedelta(minutes=22)),
+        ("queue_ortho_12@clinova.demo", "Pooja Nair", "Female", 35, 12, "initiated", "Acute lumbar back stiffness", now - timedelta(minutes=12)),
+    ]
+    for q_email, q_name, q_gender, q_age, q_token, q_status, q_complaint, q_time in ortho_queue_data:
+        q_user = (await session.execute(select(User).where(User.email == q_email))).scalar_one_or_none()
+        if not q_user:
+            q_user = User(
+                email=q_email,
+                phone=f"97000000{q_token}",
+                password_hash=hash_password("DemoQueuePass1!"),
+                role="patient",
+                is_active=True,
+            )
+            session.add(q_user)
+            await session.flush()
+            q_patient = Patient(
+                user_id=q_user.id,
+                full_name=q_name,
+                gender=q_gender,
+                date_of_birth=date(today.year - q_age, 1, 1),
+                phone=f"97000000{q_token}",
+            )
+            session.add(q_patient)
+            await session.flush()
+            q_cons = Consultation(
+                patient_id=q_patient.id,
+                hospital_id=hospital.id,
+                department="Orthopedics",
+                token_number=q_token,
+                status=q_status,
+                chief_complaint=q_complaint,
+                started_at=q_time if q_status == "in_progress" else None,
+                created_at=q_time,
+            )
+            session.add(q_cons)
+            await session.flush()
+
+    logger.info("Seeded OPD Department Queues: General Medicine (Tokens 24-26), Orthopedics (Tokens 11-12)")
+
     await session.commit()
     logger.info("All demo records committed successfully!")
 
@@ -550,6 +674,11 @@ def print_summary(data: dict[str, Any]) -> None:
     print(f"  Username/Email : {data['doctor_email']}")
     print(f"  Password       : {data['doctor_password']}")
     print("-" * 70)
+    print("HOSPITAL RECEPTION DESK (http://localhost:5174):")
+    print(f"  Username/Email : {DEMO_RECEPTIONIST_EMAIL}")
+    print("  Password       : ReceptionPass123!")
+    print("  Role           : receptionist (QR Scan, Safe Demographics & OPD Dept Assignment)")
+    print("-" * 70)
     print("PATIENT A (STANDARD CASE - ROHAN PATIL):")
     print(f"  Portal URL     : http://localhost:5173")
     print(f"  Login Email    : {data['patient_a_email']}")
@@ -571,6 +700,13 @@ async def ensure_schema() -> None:
     async with engine.begin() as conn:
         await conn.execute(text("ALTER TABLE hospital_users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL;"))
         await conn.execute(text("ALTER TABLE patients ALTER COLUMN emergency_contact TYPE VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE consultations ALTER COLUMN hospital_id DROP NOT NULL;"))
+        await conn.execute(text("ALTER TABLE consultations ADD COLUMN IF NOT EXISTS department VARCHAR(100);"))
+        await conn.execute(text("ALTER TABLE consultations ADD COLUMN IF NOT EXISTS token_number INTEGER;"))
+        await conn.execute(text("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;"))
+        await conn.execute(text("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('patient', 'hospital_staff', 'doctor', 'hospital_admin', 'receptionist'));"))
+        await conn.execute(text("ALTER TABLE hospital_users DROP CONSTRAINT IF EXISTS hospital_user_role_check;"))
+        await conn.execute(text("ALTER TABLE hospital_users ADD CONSTRAINT hospital_user_role_check CHECK (role IN ('hospital_admin', 'hospital_staff', 'doctor', 'receptionist'));"))
         await conn.run_sync(Base.metadata.create_all)
 
 

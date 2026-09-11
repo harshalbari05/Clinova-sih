@@ -55,7 +55,8 @@ export const HospitalSelectScreen: React.FC = () => {
 
   const handleSelectHospital = async (hospital: Hospital) => {
     await setSelectedHospital(hospital);
-    navigation.navigate('Consent', { hospitalId: hospital.id });
+    // Consent no longer requires hospitalId — hospital is stored in context
+    navigation.navigate('Consent');
   };
 
   return (

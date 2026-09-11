@@ -268,3 +268,17 @@ export interface ClinicalSummary {
   created_at: string;
   updated_at?: string;
 }
+
+export interface ActiveVisit {
+  has_active_visit: boolean;
+  consultation_id?: string | null;
+  hospital_id?: string | null;
+  hospital_name?: string | null;
+  department?: string | null;
+  token_number?: number | null;
+  now_serving?: number | null;
+  people_ahead?: number | null;
+  status?: string | null;
+  checkin_time?: string | null;
+}
+

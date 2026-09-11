@@ -36,9 +36,10 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
     summary="Create Consultation",
     description=(
-        "Creates a new consultation for the authenticated patient at the specified hospital. "
+        "Creates a new consultation for the authenticated patient. "
+        "hospital_id is optional to allow pre-hospital patient intake prior to facility arrival. "
         "The patient_id is derived from the Bearer JWT — it cannot be overridden by the client. "
-        "Returns 404 if the hospital_id does not exist."
+        "Returns 404 if a non-null hospital_id does not exist."
     ),
 )
 async def create_consultation(

@@ -214,6 +214,22 @@ export const ProfileScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.actionRow}
             activeOpacity={0.7}
+            onPress={() => navigation.navigate('PatientQR')}
+            accessibilityRole="button"
+            accessibilityLabel="My QR Code"
+          >
+            <View style={styles.actionLeft}>
+              <Ionicons name="qr-code-outline" size={20} color={colors.primary} />
+              <Text style={styles.actionText}>My QR Code</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity
+            style={styles.actionRow}
+            activeOpacity={0.7}
             onPress={handleLogout}
           >
             <View style={styles.actionLeft}>
@@ -359,6 +375,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     padding: spacing.md,
   },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 2,
+  },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,6 +389,12 @@ const styles = StyleSheet.create({
   actionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    marginLeft: spacing.sm,
   },
   logoutText: {
     fontSize: 14,

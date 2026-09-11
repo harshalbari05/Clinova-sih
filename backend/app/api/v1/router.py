@@ -9,12 +9,16 @@ from app.api.v1.endpoints import (
     hospitals,
     medical_documents,
     patients,
+    reception,
     summary,
     timeline,
     triage,
 )
 
 api_router = APIRouter()
+
+# Reception & Registration endpoints
+api_router.include_router(reception.router, prefix="/reception", tags=["Reception & Registration"])
 
 # Public Hospital Directory endpoints
 api_router.include_router(hospitals.router, prefix="/hospitals", tags=["Hospitals"])

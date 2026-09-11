@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import UUID_TYPE, Base, TimestampMixin
@@ -36,11 +36,11 @@ class Consultation(Base, TimestampMixin):
         index=True,
         nullable=False,
     )
-    hospital_id: Mapped[uuid.UUID] = mapped_column(
+    hospital_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID_TYPE,
-        ForeignKey("hospitals.id", ondelete="CASCADE"),
+        ForeignKey("hospitals.id", ondelete="SET NULL"),
         index=True,
-        nullable=False,
+        nullable=True,
     )
     status: Mapped[str] = mapped_column(
         String(50),
@@ -60,13 +60,23 @@ class Consultation(Base, TimestampMixin):
         DateTime(timezone=True),
         nullable=True,
     )
+    department: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        index=True,
+    )
+    token_number: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
 
     # Relationships
     patient: Mapped["Patient"] = relationship(
         "Patient",
         back_populates="consultations",
     )
-    hospital: Mapped["Hospital"] = relationship(
+    hospital: Mapped["Hospital | None"] = relationship(
         "Hospital",
         back_populates="consultations",
     )

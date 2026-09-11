@@ -1,5 +1,5 @@
 import api from './client';
-import { Patient } from '../types';
+import { Patient, ActiveVisit } from '../types';
 
 export const patientApi = {
   async getProfile(): Promise<Patient> {
@@ -9,6 +9,11 @@ export const patientApi = {
 
   async updateProfile(payload: Partial<Patient>): Promise<Patient> {
     const res = await api.put<Patient>('/patients/me', payload);
+    return res.data;
+  },
+
+  async getActiveVisit(): Promise<ActiveVisit> {
+    const res = await api.get<ActiveVisit>('/patients/me/active-visit');
     return res.data;
   },
 };

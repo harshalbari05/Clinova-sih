@@ -1,15 +1,22 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
   queueCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ queueCount }) => {
+  const { hospitalRole } = useAuth();
+  const isReceptionist = hospitalRole === 'receptionist';
+
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: 'grid_view' },
+    { to: '/registration', label: 'Patient Registration', icon: 'how_to_reg' },
     { to: '/queue', label: 'OPD Queue', icon: 'format_list_numbered', badge: queueCount },
-    { to: '/documents', label: 'Medical Documents', icon: 'folder_shared' },
+    ...(!isReceptionist
+      ? [{ to: '/documents', label: 'Medical Documents', icon: 'folder_shared' }]
+      : []),
   ];
 
   return (
